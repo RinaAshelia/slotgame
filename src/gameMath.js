@@ -27,18 +27,6 @@ const regularProfileBase = {
   nearMiss: 0.22,
 };
 
-const allInProfileBase = {
-  jackpot: 0.000004,
-  lion: 0.012,
-  "white-wolf": 0.02,
-  "dark-wolf": 0.025,
-  "pink-elf": 0.018,
-  "blonde-cat": 0.012,
-  "blonde-heart": 0.009,
-  sheep: 0.004,
-  nearMiss: 0.2,
-};
-
 function withMixedOutcome(profile) {
   const totalWithoutMixed = Object.values(profile).reduce((sum, chance) => sum + chance, 0);
   return {
@@ -48,7 +36,6 @@ function withMixedOutcome(profile) {
 }
 
 export const REGULAR_OUTCOME_PROFILE = withMixedOutcome(regularProfileBase);
-export const ALL_IN_OUTCOME_PROFILE = withMixedOutcome(allInProfileBase);
 
 export function getPayoutMultiplier(stake, options = {}) {
   return stake / BASE_BET;
@@ -75,12 +62,11 @@ export function getSymbolPayout(symbolId, stake, options = {}) {
 }
 
 export function getRoundStake(bet, options = {}) {
-  const { allIn = false, balance = 0 } = options;
-  return allIn ? Math.max(0, balance) : bet;
+  return bet;
 }
 
 export function getOutcomeKind(roll, options = {}) {
-  const profile = options.allIn ? ALL_IN_OUTCOME_PROFILE : REGULAR_OUTCOME_PROFILE;
+  const profile = REGULAR_OUTCOME_PROFILE;
   const outcomeOrder = [
     ["jackpot", "jackpot"],
     ["lion", "lion"],

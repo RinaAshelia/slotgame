@@ -8,63 +8,69 @@ import pinkElfGirl from "./assets/pink-elf-girl-clean.png";
 import sheepSymbol from "./assets/sheep-symbol-new-cut.png";
 import whiteWolfBoy from "./assets/white-wolf-boy-cut.png";
 import darkWolfFullCut from "./assets/dark-wolf-full-cut.png";
+import {
+  BASE_SYMBOL_PAYOUTS,
+  BET_OPTIONS,
+  JACKPOT_AMOUNT,
+  getOutcomeKind,
+  getRoundStake,
+  getSymbolPayout,
+  qualifiesForRiskChoice,
+  resolveRiskChoice,
+} from "./gameMath.js";
 
 const numberFormatter = new Intl.NumberFormat("de-DE", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
-const JACKPOT_AMOUNT = 1250000;
-const lineOptions = [5, 10, 15, 20, 25];
-const betOptions = [0.5, 1, 2.5, 5, 10];
-
 const symbols = [
   {
     id: "dark-wolf",
     label: "Alucard",
-    payout: 750,
+    payout: BASE_SYMBOL_PAYOUTS["dark-wolf"],
     kind: "image",
     src: darkWolfFullCut,
   },
   {
     id: "blonde-cat",
     label: "Turri",
-    payout: 400,
+    payout: BASE_SYMBOL_PAYOUTS["blonde-cat"],
     kind: "image",
     src: blondeCatGirl,
   },
   {
     id: "blonde-heart",
     label: "Ashelia",
-    payout: 350,
+    payout: BASE_SYMBOL_PAYOUTS["blonde-heart"],
     kind: "image",
     src: blondeHeartGirl,
   },
   {
     id: "pink-elf",
     label: "Eden",
-    payout: 500,
+    payout: BASE_SYMBOL_PAYOUTS["pink-elf"],
     kind: "image",
     src: pinkElfGirl,
   },
   {
     id: "white-wolf",
     label: "Poly",
-    payout: 1000,
+    payout: BASE_SYMBOL_PAYOUTS["white-wolf"],
     kind: "image",
     src: whiteWolfBoy,
   },
   {
     id: "lion",
     label: "Löwe",
-    payout: 5000,
+    payout: BASE_SYMBOL_PAYOUTS.lion,
     kind: "image",
     src: lionEmblem,
   },
   {
     id: "sheep",
     label: "Schaf",
-    payout: 50,
+    payout: BASE_SYMBOL_PAYOUTS.sheep,
     kind: "image",
     src: sheepSymbol,
   },
@@ -78,16 +84,30 @@ const symbols = [
 ];
 
 const symbolMap = Object.fromEntries(symbols.map((symbol) => [symbol.id, symbol]));
-const payoutBoardSymbols = [
-  "jackpot",
-  "lion",
-  "white-wolf",
-  "dark-wolf",
-  "pink-elf",
-  "blonde-cat",
-  "blonde-heart",
-  "sheep",
-].map((symbolId) => symbolMap[symbolId]);
+const payoutBoardSections = [
+  {
+    id: "top",
+    title: "Top Treffer",
+    subtitle: "Die großen Sprünge mit klarer Symbolleiter.",
+    symbolIds: ["jackpot", "lion", "white-wolf", "dark-wolf"],
+  },
+  {
+    id: "mid",
+    title: "Solide Gewinne",
+    subtitle: "Spürbar besser als nur Einsatz zurück.",
+    symbolIds: ["pink-elf", "blonde-cat", "blonde-heart"],
+  },
+  {
+    id: "return",
+    title: "Sicherheitsnetz",
+    subtitle: "Der kleine Rettungsanker für schwächere Runden.",
+    symbolIds: ["sheep"],
+  },
+].map((section) => ({
+  ...section,
+  symbols: section.symbolIds.map((symbolId) => symbolMap[symbolId]),
+}));
+const premiumPayoutIds = new Set(["jackpot", "lion", "white-wolf", "dark-wolf"]);
 
 const normalSymbols = symbols.filter((symbol) => symbol.id !== "jackpot");
 const spinningSymbols = symbols;
@@ -97,16 +117,8 @@ const featuredSymbols = symbols.filter(
 const normalSymbolIds = normalSymbols.map((symbol) => symbol.id);
 const spinningSymbolIds = spinningSymbols.map((symbol) => symbol.id);
 
-function formatCurrency(value) {
-  return `€ ${numberFormatter.format(value)}`;
-}
-
 function formatGil(value) {
   return `${numberFormatter.format(value)} GIL`;
-}
-
-function formatSymbolPayout(symbol) {
-  return formatGil(symbol.payout);
 }
 
 function getRowsForSymbol(symbolId, pool = normalSymbolIds) {
@@ -155,46 +167,16 @@ function getNearMissOutcome() {
   return outcome.sort(() => Math.random() - 0.5);
 }
 
-function getScriptedOutcome() {
-  const roll = Math.random();
-
-  if (roll < 0.005) {
-    return ["jackpot", "jackpot", "jackpot"];
+function getPayoutDescription(symbolId, bet) {
+  if (symbolId === "jackpot") {
+    return "Fixer Hauptgewinn";
   }
 
-  if (roll < 0.025) {
-    return ["lion", "lion", "lion"];
+  if (symbolId === "sheep") {
+    return `Einsatz zurück: ${formatGil(bet)}`;
   }
 
-  if (roll < 0.045) {
-    return ["white-wolf", "white-wolf", "white-wolf"];
-  }
-
-  if (roll < 0.065) {
-    return ["dark-wolf", "dark-wolf", "dark-wolf"];
-  }
-
-  if (roll < 0.085) {
-    return ["blonde-cat", "blonde-cat", "blonde-cat"];
-  }
-
-  if (roll < 0.105) {
-    return ["pink-elf", "pink-elf", "pink-elf"];
-  }
-
-  if (roll < 0.125) {
-    return ["blonde-heart", "blonde-heart", "blonde-heart"];
-  }
-
-  if (roll < 0.145) {
-    return ["sheep", "sheep", "sheep"];
-  }
-
-  if (roll < 0.38) {
-    return getNearMissOutcome();
-  }
-
-  return getMixedOutcome();
+  return "3x Symbol auf der Mitte";
 }
 
 function SymbolArt({ symbol, compact = false }) {
@@ -231,45 +213,150 @@ function ReelWindow({ reels, isSpinning, compact = false }) {
   );
 }
 
-function PayoutBoard() {
+function PayoutBoard({ bet, highlightedSymbolId }) {
   return (
     <section aria-label="Auszahlungstafel" className="payout-board">
       <div className="payout-board-header">
-        <h2>Auszahlungstafel</h2>
-        <p>Gewinn bei 3 gleichen Symbolen auf der mittleren Linie</p>
+        <div>
+          <h2>Auszahlungstafel</h2>
+          <p>Alle Gewinne gelten für 3 gleiche Symbole auf der mittleren Linie.</p>
+        </div>
+        <strong className="payout-board-bet">Aktuell bei {formatGil(bet)} Einsatz</strong>
       </div>
 
-      <div className="payout-board-list">
-        {payoutBoardSymbols.map((symbol) => (
-          <article className="payout-board-row" key={symbol.id}>
-            <div className="payout-board-symbol">
-              <SymbolArt compact symbol={symbol} />
+      <div className="payout-board-groups">
+        {payoutBoardSections.map((section) => (
+          <div className="payout-board-group" key={section.id}>
+            <div className="payout-board-group-header">
+              <strong>{section.title}</strong>
+              <span>{section.subtitle}</span>
             </div>
-            <div className="payout-board-copy">
-              <strong>{symbol.label}</strong>
-              <span>3x Symbol</span>
+
+            <div className="payout-board-list">
+              {section.symbols.map((symbol) => (
+                <article
+                  className={`payout-board-row ${premiumPayoutIds.has(symbol.id) ? "is-premium" : ""} ${
+                    highlightedSymbolId === symbol.id ? "is-active" : ""
+                  }`}
+                  key={symbol.id}
+                >
+                  <div className="payout-board-symbol">
+                    <SymbolArt compact symbol={symbol} />
+                  </div>
+                  <div className="payout-board-copy">
+                    <strong>{symbol.label}</strong>
+                    <span>{getPayoutDescription(symbol.id, bet)}</span>
+                  </div>
+                  <div className="payout-board-value">{formatGil(getSymbolPayout(symbol.id, bet))}</div>
+                </article>
+              ))}
             </div>
-            <div className="payout-board-value">{formatSymbolPayout(symbol)}</div>
-          </article>
+          </div>
         ))}
       </div>
     </section>
   );
 }
 
+function StepperControl({
+  decrementDisabled,
+  incrementDisabled,
+  label,
+  onDecrement,
+  onIncrement,
+  value,
+}) {
+  return (
+    <div className="control-group">
+      <span>{label}</span>
+      <div className="control-stepper">
+        <button disabled={decrementDisabled} onClick={onDecrement} type="button">
+          -
+        </button>
+        <strong>{value}</strong>
+        <button disabled={incrementDisabled} onClick={onIncrement} type="button">
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SpinButton({ className, disabled, isSpinning, onClick, stake }) {
+  return (
+    <button aria-label="Spielen" className={className} disabled={disabled} onClick={onClick} type="button">
+      <span>{isSpinning ? "Dreht..." : "Spielen"}</span>
+      <small>{formatGil(stake)} pro Dreh</small>
+    </button>
+  );
+}
+
+function RoundBrief({ bet, isJackpot, status }) {
+  return (
+    <section className={`round-brief ${isJackpot ? "is-jackpot" : ""} is-${status.tone}`}>
+      <div className="round-brief-status">
+        <span className="round-brief-eyebrow">Rundenstatus</span>
+        <h2>{status.title}</h2>
+        <p>{status.detail}</p>
+      </div>
+
+      <div className="round-brief-rules">
+        <span className="round-brief-eyebrow">Direkt erklärt</span>
+        <div className="round-brief-chips">
+          <span>3 gleiche Symbole auf der Mitte</span>
+          <span>3x Schaf = {formatGil(bet)}</span>
+          <span>10x+ Gewinn = Schaf oder Loewe</span>
+          <span>Jackpot bleibt {formatGil(JACKPOT_AMOUNT)}</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MetricsPanel({ balance, className = "", lastWin, totalStake }) {
+  const metrics = [
+    { label: "Guthaben", value: formatGil(balance), modifier: "is-balance" },
+    { label: "Rundeneinsatz", value: formatGil(totalStake), modifier: "is-stake" },
+    {
+      label: "Letzter Gewinn",
+      value: formatGil(lastWin),
+      modifier: lastWin > 0 ? "is-win" : "is-muted",
+    },
+  ];
+
+  return (
+    <section className={className}>
+      {metrics.map((metric) => (
+        <article className={`metric-card ${metric.modifier}`} key={metric.label}>
+          <span>{metric.label}</span>
+          <strong>{metric.value}</strong>
+        </article>
+      ))}
+    </section>
+  );
+}
+
 export function App() {
   const [reels, setReels] = useState([getRandomRows(), getRandomRows(), getRandomRows()]);
-  const [balance, setBalance] = useState(2850);
-  const [lastWin, setLastWin] = useState(750);
-  const [lines, setLines] = useState(25);
+  const [balance, setBalance] = useState(400);
+  const [lastWin, setLastWin] = useState(0);
   const [bet, setBet] = useState(2.5);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [activeMessage, setActiveMessage] = useState("Zeig, auf welcher Seite du stehst.");
+  const [pendingRiskChoice, setPendingRiskChoice] = useState(null);
+  const [isResolvingRiskChoice, setIsResolvingRiskChoice] = useState(false);
+  const [status, setStatus] = useState({
+    title: "Drei gleiche in der Mitte gewinnen.",
+    detail: "Das Schaf bringt exakt deinen Einsatz zurück. Große Treffer ab 10x Einsatz gehen erst in die Risikoentscheidung.",
+    tone: "ready",
+  });
   const [isJackpot, setIsJackpot] = useState(false);
+  const [highlightedSymbolId, setHighlightedSymbolId] = useState(null);
   const timersRef = useRef([]);
   const intervalsRef = useRef([]);
+  const riskResolutionGuardRef = useRef(false);
 
-  const totalStake = useMemo(() => bet * (lines / 5), [bet, lines]);
+  const totalStake = useMemo(() => getRoundStake(bet), [bet]);
+  const hasPendingRiskChoice = Boolean(pendingRiskChoice);
 
   useEffect(() => {
     return () => {
@@ -285,74 +372,167 @@ export function App() {
     timersRef.current = [];
   }
 
-  function cycleLines(direction) {
-    setLines((current) => {
-      const currentIndex = lineOptions.indexOf(current);
-      const nextIndex =
-        direction > 0
-          ? Math.min(lineOptions.length - 1, currentIndex + 1)
-          : Math.max(0, currentIndex - 1);
-
-      return lineOptions[nextIndex];
-    });
-  }
-
   function cycleBet(direction) {
     setBet((current) => {
-      const currentIndex = betOptions.indexOf(current);
+      const currentIndex = BET_OPTIONS.indexOf(current);
       const nextIndex =
         direction > 0
-          ? Math.min(betOptions.length - 1, currentIndex + 1)
+          ? Math.min(BET_OPTIONS.length - 1, currentIndex + 1)
           : Math.max(0, currentIndex - 1);
 
-      return betOptions[nextIndex];
+      return BET_OPTIONS[nextIndex];
     });
   }
 
-  function resolveSpin(outcome) {
+  function resolveSpin(outcome, spinContext) {
+    const { stake } = spinContext;
     const winningSymbol = outcome.every((symbolId) => symbolId === outcome[0]) ? symbolMap[outcome[0]] : null;
 
     if (!winningSymbol) {
       setLastWin(0);
-      setActiveMessage("Kein Dreier. Noch einmal drehen.");
+      setPendingRiskChoice(null);
+      setIsResolvingRiskChoice(false);
+      riskResolutionGuardRef.current = false;
+      setStatus({
+        title: "Kein Treffer.",
+        detail: `Mit ${formatGil(stake)} Einsatz hat diesmal nichts verbunden.`,
+        tone: "loss",
+      });
       setIsJackpot(false);
+      setHighlightedSymbolId(null);
       return;
     }
 
-    const multiplier = (lines / 25) * (bet / 2.5);
-    const payout = Math.round(winningSymbol.payout * Math.max(1, multiplier));
+    const payout = getSymbolPayout(winningSymbol.id, stake);
+
+    if (qualifiesForRiskChoice(payout, stake)) {
+      setLastWin(0);
+      setIsResolvingRiskChoice(false);
+      riskResolutionGuardRef.current = false;
+      setPendingRiskChoice({
+        symbolId: winningSymbol.id,
+        symbolLabel: winningSymbol.label,
+        openWin: payout,
+      });
+      setHighlightedSymbolId(winningSymbol.id);
+      setStatus({
+        title: `${winningSymbol.label} bringt ${formatGil(payout)}.`,
+        detail: "Der Gewinn ist noch offen. Jetzt entscheidest du zwischen Schaf und Loewe.",
+        tone: "risk",
+      });
+      setIsJackpot(winningSymbol.id === "jackpot");
+      return;
+    }
 
     setBalance((current) => current + payout);
     setLastWin(payout);
+    setPendingRiskChoice(null);
+    setIsResolvingRiskChoice(false);
+    riskResolutionGuardRef.current = false;
+    setHighlightedSymbolId(winningSymbol.id);
 
     if (winningSymbol.id === "jackpot") {
-      setActiveMessage("Mega Jackpot geknackt.");
+      setStatus({
+        title: "Mega Jackpot!",
+        detail: "Drei Jackpot-Symbole holen den fixen Hauptgewinn auf der mittleren Linie.",
+        tone: "jackpot",
+      });
       setIsJackpot(true);
       return;
     }
 
-    setActiveMessage(`Dreier auf ${winningSymbol.label}.`);
+    setStatus({
+      title: `${winningSymbol.label} zahlt ${formatGil(payout)}.`,
+      detail: `Drei gleiche auf der mittleren Linie bei ${formatGil(stake)} Einsatz.`,
+      tone: "win",
+    });
     setIsJackpot(false);
   }
 
-  function spin() {
-    if (isSpinning) {
+  function handleRiskDecision(takeSafe) {
+    if (riskResolutionGuardRef.current || !pendingRiskChoice) {
       return;
     }
 
-    if (balance < totalStake) {
-      setActiveMessage("Zu wenig Guthaben für diese Runde.");
+    riskResolutionGuardRef.current = true;
+    setIsResolvingRiskChoice(true);
+
+    const choice = pendingRiskChoice;
+    const result = resolveRiskChoice(choice.openWin, { takeSafe });
+    setBalance((current) => current + result.creditedWin);
+    setLastWin(result.creditedWin);
+    setPendingRiskChoice(null);
+    setIsResolvingRiskChoice(false);
+    riskResolutionGuardRef.current = false;
+    setIsJackpot(choice.symbolId === "jackpot" && result.creditedWin > 0);
+
+    if (result.outcome === "safe") {
+      setStatus({
+        title: `Schaf nimmt ${formatGil(result.creditedWin)} mit.`,
+        detail: `${choice.symbolLabel} bleibt sicher ausgezahlt.`,
+        tone: choice.symbolId === "jackpot" ? "jackpot" : "win",
+      });
+      return;
+    }
+
+    if (result.outcome === "lion-win") {
+      setStatus({
+        title: `Loewe verdoppelt auf ${formatGil(result.creditedWin)}.`,
+        detail: `${choice.symbolLabel} wurde aggressiv weitergespielt und hat gehalten.`,
+        tone: choice.symbolId === "jackpot" ? "jackpot" : "win",
+      });
+      return;
+    }
+
+    setStatus({
+      title: "Loewe verliert den offenen Gewinn.",
+      detail: `${choice.symbolLabel} war da, aber die Risikoentscheidung hat nichts gesichert.`,
+      tone: "loss",
+    });
+  }
+
+  function buildOutcome(outcomeKind) {
+    if (outcomeKind === "near-miss") {
+      return getNearMissOutcome();
+    }
+
+    if (outcomeKind === "mixed") {
+      return getMixedOutcome();
+    }
+
+    return [outcomeKind, outcomeKind, outcomeKind];
+  }
+
+  function spin() {
+    if (isSpinning || hasPendingRiskChoice) {
+      return;
+    }
+
+    const stake = getRoundStake(bet);
+
+    if (stake <= 0 || balance < stake) {
+      setStatus({
+        title: "Zu wenig Guthaben.",
+        detail: "Reduziere den Einsatz oder triff erst wieder einen Gewinn.",
+        tone: "loss",
+      });
       setIsJackpot(false);
+      setHighlightedSymbolId(null);
       return;
     }
 
     clearSpinHandles();
-    setBalance((current) => current - totalStake);
+    setBalance((current) => current - stake);
     setIsSpinning(true);
     setIsJackpot(false);
-    setActiveMessage("Die Walzen laufen...");
+    setHighlightedSymbolId(null);
+    setStatus({
+      title: "Walzen laufen.",
+      detail: `${formatGil(stake)} Einsatz ist jetzt auf der mittleren Linie im Spiel.`,
+      tone: "spinning",
+    });
 
-    const outcome = getScriptedOutcome();
+    const outcome = buildOutcome(getOutcomeKind(Math.random()));
     const nextReels = [getRandomRows(true), getRandomRows(true), getRandomRows(true)];
     setReels(nextReels);
 
@@ -377,7 +557,7 @@ export function App() {
 
     const endTimeout = window.setTimeout(() => {
       setIsSpinning(false);
-      resolveSpin(outcome);
+      resolveSpin(outcome, { stake });
       clearSpinHandles();
     }, 2800);
 
@@ -393,7 +573,7 @@ export function App() {
             <h1>
               Lieber einmal <span>Löwe</span> als immer Schaf
             </h1>
-            <p>{activeMessage}</p>
+            <p>Klare Mittellinie, sichtbares Risiko und eine Auszahlungstafel, die exakt zum Einsatz passt.</p>
           </div>
 
           <div className={`desktop-machine-shell ${isJackpot ? "is-jackpot" : ""}`}>
@@ -405,18 +585,38 @@ export function App() {
             <div className="desktop-slot-stack">
               <ReelWindow isSpinning={isSpinning} reels={reels} />
 
-              <button
-                aria-label="Spielen"
-                className="desktop-spin-button"
-                disabled={isSpinning}
-                onClick={spin}
-                type="button"
-              >
-                {isSpinning ? "Dreht..." : "Spielen"}
-              </button>
+              <div className="desktop-controls">
+                <StepperControl
+                  decrementDisabled={isSpinning || hasPendingRiskChoice || bet === BET_OPTIONS[0]}
+                  incrementDisabled={
+                    isSpinning || hasPendingRiskChoice || bet === BET_OPTIONS[BET_OPTIONS.length - 1]
+                  }
+                  label="Einsatz"
+                  onDecrement={() => cycleBet(-1)}
+                  onIncrement={() => cycleBet(1)}
+                  value={formatGil(bet)}
+                />
+
+                <SpinButton
+                  className="desktop-spin-button"
+                  disabled={isSpinning || hasPendingRiskChoice}
+                  isSpinning={isSpinning}
+                  onClick={() => spin()}
+                  stake={totalStake}
+                />
+              </div>
+
+              <RoundBrief bet={bet} isJackpot={isJackpot} status={status} />
+
+              <MetricsPanel
+                balance={balance}
+                className="desktop-metrics"
+                lastWin={lastWin}
+                totalStake={totalStake}
+              />
             </div>
 
-            <PayoutBoard />
+            <PayoutBoard bet={bet} highlightedSymbolId={highlightedSymbolId} />
           </div>
         </div>
       </section>
@@ -428,8 +628,7 @@ export function App() {
             Lieber einmal <span>Löwe</span> als immer Schaf
           </h1>
           <p className="subline">
-            Geburtstags-Slot im Rot-Gold-Look mit echten Charakter-Motiven, Löwe, Schaf und
-            eigenem Jackpot.
+            Eine klare Gewinnlinie, offene Großgewinne und ein fixer Jackpot im Rot-Gold-Look.
           </p>
         </header>
 
@@ -442,76 +641,59 @@ export function App() {
           <ReelWindow isSpinning={isSpinning} reels={reels} />
 
           <div className="mobile-actions">
-            <div className="control-group">
-              <span>Linien</span>
-              <div className="control-stepper">
-                <button
-                  disabled={isSpinning || lines === lineOptions[0]}
-                  onClick={() => cycleLines(-1)}
-                  type="button"
-                >
-                  -
-                </button>
-                <strong>{lines}</strong>
-                <button
-                  disabled={isSpinning || lines === lineOptions[lineOptions.length - 1]}
-                  onClick={() => cycleLines(1)}
-                  type="button"
-                >
-                  +
-                </button>
-              </div>
-            </div>
+            <StepperControl
+              decrementDisabled={isSpinning || hasPendingRiskChoice || bet === BET_OPTIONS[0]}
+              incrementDisabled={
+                isSpinning || hasPendingRiskChoice || bet === BET_OPTIONS[BET_OPTIONS.length - 1]
+              }
+              label="Einsatz"
+              onDecrement={() => cycleBet(-1)}
+              onIncrement={() => cycleBet(1)}
+              value={formatGil(bet)}
+            />
 
-            <button className="mobile-play" disabled={isSpinning} onClick={spin} type="button">
-              {isSpinning ? "Walzen drehen..." : "Jetzt spielen"}
-            </button>
-
-            <div className="control-group">
-              <span>Einsatz</span>
-              <div className="control-stepper">
-                <button
-                  disabled={isSpinning || bet === betOptions[0]}
-                  onClick={() => cycleBet(-1)}
-                  type="button"
-                >
-                  -
-                </button>
-                <strong>{formatCurrency(bet)}</strong>
-                <button
-                  disabled={isSpinning || bet === betOptions[betOptions.length - 1]}
-                  onClick={() => cycleBet(1)}
-                  type="button"
-                >
-                  +
-                </button>
-              </div>
+            <div className="mobile-action-buttons">
+              <SpinButton
+                className="mobile-play"
+                disabled={isSpinning || hasPendingRiskChoice}
+                isSpinning={isSpinning}
+                onClick={() => spin()}
+                stake={totalStake}
+              />
             </div>
           </div>
         </section>
 
-        <section className="mobile-metrics">
-          <article>
-            <span>Guthaben</span>
-            <strong>{formatCurrency(balance)}</strong>
-          </article>
-          <article>
-            <span>Letzter Gewinn</span>
-            <strong>{formatCurrency(lastWin)}</strong>
-          </article>
-          <article>
-            <span>Rundeneinsatz</span>
-            <strong>{formatCurrency(totalStake)}</strong>
-          </article>
-        </section>
+        <RoundBrief bet={bet} isJackpot={isJackpot} status={status} />
 
-        <section className={`mobile-status-panel ${isJackpot ? "is-jackpot" : ""}`}>
-          <h2>{activeMessage}</h2>
-          <p>Jackpot nur mit drei goldenen High-Roller-Motiven auf der mittleren Gewinnlinie.</p>
-        </section>
+        <MetricsPanel balance={balance} className="mobile-metrics" lastWin={lastWin} totalStake={totalStake} />
 
-        <PayoutBoard />
+        <PayoutBoard bet={bet} highlightedSymbolId={highlightedSymbolId} />
       </section>
+
+      {pendingRiskChoice ? (
+        <section className="risk-overlay" role="dialog" aria-modal="true" aria-labelledby="risk-title">
+          <div className="risk-overlay-card">
+            <span className="risk-kicker">Offener Gewinn</span>
+            <h2 id="risk-title">Bleibst du Schaf oder wirst du Loewe?</h2>
+            <strong>{formatGil(pendingRiskChoice.openWin)}</strong>
+            <p>Der Gewinn ist noch nicht gesichert.</p>
+            <div className="risk-actions">
+              <button disabled={isResolvingRiskChoice} type="button" onClick={() => handleRiskDecision(true)}>
+                Sicher nehmen
+              </button>
+              <button
+                className="risk-action-danger"
+                disabled={isResolvingRiskChoice}
+                type="button"
+                onClick={() => handleRiskDecision(false)}
+              >
+                Einmal Loewe sein
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

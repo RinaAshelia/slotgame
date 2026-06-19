@@ -2,11 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  ALL_IN_OUTCOME_PROFILE,
   BASE_SYMBOL_PAYOUTS,
   BET_OPTIONS,
   JACKPOT_AMOUNT,
-  REGULAR_OUTCOME_PROFILE,
   getPayoutMultiplier,
   getRoundStake,
   getScaledPayout,
@@ -33,15 +31,14 @@ test("non-jackpot payouts now scale directly with the current stake", () => {
   assert.equal(getSymbolPayout("pink-elf", 25), 150);
 });
 
-test("jackpot stays fixed regardless of stake or all-in mode", () => {
+test("jackpot stays fixed regardless of stake", () => {
   assert.equal(JACKPOT_AMOUNT, 1250000);
   assert.equal(getSymbolPayout("jackpot", 2.5), 1250000);
   assert.equal(getSymbolPayout("jackpot", 100), 1250000);
-  assert.equal(getSymbolPayout("jackpot", 400, { allIn: true }), 1250000);
 });
 
-test("all in uses the full current balance as the round stake", () => {
-  assert.equal(getRoundStake(25, { allIn: true, balance: 400 }), 400);
+test("round stake follows the selected bet", () => {
+  assert.equal(getRoundStake(25, { balance: 400 }), 25);
 });
 
 test("base payouts are raised to match the bigger stake ladder", () => {
@@ -57,13 +54,6 @@ test("base payouts are raised to match the bigger stake ladder", () => {
   });
 });
 
-test("all-in profile increases the chance of big prizes", () => {
-  assert.ok(ALL_IN_OUTCOME_PROFILE.jackpot > REGULAR_OUTCOME_PROFILE.jackpot);
-  assert.ok(ALL_IN_OUTCOME_PROFILE.lion > REGULAR_OUTCOME_PROFILE.lion);
-  assert.ok(ALL_IN_OUTCOME_PROFILE["white-wolf"] > REGULAR_OUTCOME_PROFILE["white-wolf"]);
-  assert.ok(ALL_IN_OUTCOME_PROFILE.mixed < REGULAR_OUTCOME_PROFILE.mixed);
-});
-
 test("top-tier symbols now have clearly larger reward gaps", () => {
   assert.equal(BASE_SYMBOL_PAYOUTS.lion - BASE_SYMBOL_PAYOUTS["white-wolf"], 50);
   assert.equal(BASE_SYMBOL_PAYOUTS["white-wolf"] - BASE_SYMBOL_PAYOUTS["dark-wolf"], 25);
@@ -74,12 +64,11 @@ test("top-tier symbols now have clearly larger reward gaps", () => {
 test("three sheep always returns exactly the current stake", () => {
   assert.equal(getSymbolPayout("sheep", 2.5), 2.5);
   assert.equal(getSymbolPayout("sheep", 25), 25);
-  assert.equal(getSymbolPayout("sheep", 400, { allIn: true }), 400);
 });
 
-test("all-in payouts for non-jackpot symbols also follow the full staked amount", () => {
-  assert.equal(getSymbolPayout("dark-wolf", 400, { allIn: true }), 4000);
-  assert.equal(getSymbolPayout("blonde-heart", 400, { allIn: true }), 800);
+test("scaled payout helper rounds to cents", () => {
+  assert.equal(getScaledPayout(15, 25), 150);
+  assert.equal(getScaledPayout(5, 10), 20);
 });
 
 test("wins only trigger the Schaf oder Loewe choice at 10x stake or higher", () => {
