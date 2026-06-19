@@ -86,6 +86,8 @@ test("wins only trigger the Schaf oder Loewe choice at 10x stake or higher", () 
   assert.equal(qualifiesForRiskChoice(24.99, 2.5), false);
   assert.equal(qualifiesForRiskChoice(25, 2.5), true);
   assert.equal(qualifiesForRiskChoice(1000, 100), true);
+  assert.equal(qualifiesForRiskChoice(25, 0), false);
+  assert.equal(qualifiesForRiskChoice(25, -5), false);
 });
 
 test("taking the safe option returns the open win unchanged", () => {
