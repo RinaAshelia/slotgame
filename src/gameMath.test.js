@@ -5,6 +5,10 @@ import {
   BASE_SYMBOL_PAYOUTS,
   BET_OPTIONS,
   JACKPOT_AMOUNT,
+  REGULAR_OUTCOME_PROFILE,
+  RISK_TRIGGER_MULTIPLIER,
+  canOfferRiskChoice,
+  getOutcomeProfile,
   getPayoutMultiplier,
   getRoundStake,
   getScaledPayout,
@@ -71,12 +75,64 @@ test("scaled payout helper rounds to cents", () => {
   assert.equal(getScaledPayout(5, 10), 20);
 });
 
-test("wins only trigger the Schaf oder Loewe choice at 10x stake or higher", () => {
-  assert.equal(qualifiesForRiskChoice(24.99, 2.5), false);
-  assert.equal(qualifiesForRiskChoice(25, 2.5), true);
-  assert.equal(qualifiesForRiskChoice(1000, 100), true);
+test("balanced model lowers the Schaf oder Loewe trigger to 4x stake", () => {
+  assert.equal(RISK_TRIGGER_MULTIPLIER, 4);
+  assert.equal(qualifiesForRiskChoice(9.99, 2.5), false);
+  assert.equal(qualifiesForRiskChoice(10, 2.5), true);
+  assert.equal(qualifiesForRiskChoice(39.99, 10), false);
+  assert.equal(qualifiesForRiskChoice(40, 10), true);
   assert.equal(qualifiesForRiskChoice(25, 0), false);
   assert.equal(qualifiesForRiskChoice(25, -5), false);
+});
+
+test("risk choice is only offered for eligible symbols and never for sheep", () => {
+  assert.equal(canOfferRiskChoice("sheep", 25, 2.5), false);
+  assert.equal(canOfferRiskChoice("blonde-heart", 5, 2.5), false);
+  assert.equal(canOfferRiskChoice("blonde-cat", 10, 2.5), true);
+  assert.equal(canOfferRiskChoice("jackpot", JACKPOT_AMOUNT, 2.5), true);
+});
+
+test("balanced outcome profile now targets roughly a 16.5 percent hit rate with fewer near misses", () => {
+  const winningSymbols = [
+    "jackpot",
+    "lion",
+    "white-wolf",
+    "dark-wolf",
+    "pink-elf",
+    "blonde-cat",
+    "blonde-heart",
+    "sheep",
+  ];
+  const profile = getOutcomeProfile(2.5);
+  const hitRate = winningSymbols.reduce((sum, symbolId) => sum + profile[symbolId], 0);
+
+  assert.equal(Number(hitRate.toFixed(6)), 0.165);
+  assert.equal(Number(profile.nearMiss.toFixed(3)), 0.155);
+});
+
+test("higher stakes lightly boost premium-hit frequency from 25 GIL upward", () => {
+  const premiumSymbols = ["jackpot", "lion", "white-wolf", "dark-wolf", "pink-elf", "blonde-cat"];
+  const winningSymbols = [
+    "jackpot",
+    "lion",
+    "white-wolf",
+    "dark-wolf",
+    "pink-elf",
+    "blonde-cat",
+    "blonde-heart",
+    "sheep",
+  ];
+  const baseProfile = getOutcomeProfile(10);
+  const highStakeProfile = getOutcomeProfile(50);
+  const basePremiumRate = premiumSymbols.reduce((sum, symbolId) => sum + baseProfile[symbolId], 0);
+  const highStakePremiumRate = premiumSymbols.reduce((sum, symbolId) => sum + highStakeProfile[symbolId], 0);
+  const baseHitRate = winningSymbols.reduce((sum, symbolId) => sum + baseProfile[symbolId], 0);
+  const highStakeHitRate = winningSymbols.reduce((sum, symbolId) => sum + highStakeProfile[symbolId], 0);
+
+  assert.equal(baseProfile.jackpot, highStakeProfile.jackpot);
+  assert.equal(Number(baseHitRate.toFixed(6)), Number(highStakeHitRate.toFixed(6)));
+  assert.equal(Number(baseHitRate.toFixed(6)), 0.165);
+  assert.equal(Number(highStakePremiumRate.toFixed(6)) > Number(basePremiumRate.toFixed(6)), true);
 });
 
 test("taking the safe option returns the open win unchanged", () => {

@@ -25,5 +25,15 @@ When implementing from a selected generated mock, treat that image as the source
 - The game UI should keep a visible rules and status block near the controls so inexperienced players immediately understand the single payline, sheep return, fixed jackpot, and `Schaf oder Loewe` risk choice.
 - The payout board should be grouped into top hits, solid wins, and sheep return, and it should always show values for the current bet with the most recent winning symbol visually highlighted.
 - Metrics hierarchy should prioritize current balance and round stake over last win.
-- Wins are only routed into `Schaf oder Loewe` when they are worth at least `10x` the current stake.
+- The balanced mode uses three fixed horizontal paylines (top, middle, bottom) with no line selector or diagonal payouts.
+- Jackpot wins stay exclusive to the middle row even though the other two horizontal rows also pay normally.
+- Wins are routed into `Schaf oder Loewe` once they are worth at least `4x` the current stake, starting at `Turri` and above on the base ladder.
 - The risk choice appears as a blocking overlay, keeps the win uncredited until resolved, and also applies to jackpot wins.
+- The risk overlay should show both sheep and lion motifs already in the question state, then keep a visible result state with the matching motif until the player closes it.
+- Premium-casino audio should be synthesized in-browser first, with a visible mute toggle and initial cues for spin start, reel stop, regular win, feature trigger, risk resolution, and jackpot.
+- The sound toggle should live as a right-aligned utility control in the hero/header rather than centered in the title stack.
+- Live metrics (balance, round stake, last win) should stay visually above the round status; the status block stays visible but compact instead of becoming collapsible.
+- The `Schaf` and `Löwe` overlay buttons should each fire their own animal-flavored click cue before the later risk outcome sound resolves.
+- The visual atmosphere should use a subtle jackpot-character hero backdrop with gold spotlights and premium glow accents instead of a flat background, keeping the UI readable while making the birthday jackpot motif more present.
+- The jackpot-character backdrop should stay visible in the initial above-the-fold hero area on load rather than sitting lower in the scrollable payout section.
+- The desktop jackpot motif should live beside the reels as a dedicated full-body character stage rather than as a floating background figure, so the birthday jackpot motif feels anchored and intentional.
