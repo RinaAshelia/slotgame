@@ -12,13 +12,17 @@ export const WHEEL_PRIZES = Object.freeze({
 export const TOTAL_WHEEL_SPINS = 3;
 
 export function createWheelResult(segment) {
-  return {
+  if (!Object.hasOwn(WHEEL_PRIZES, segment.id)) {
+    throw new Error(`Unknown wheel segment id: ${segment.id}`);
+  }
+
+  return Object.freeze({
     id: segment.id,
     label: segment.label,
     prize: WHEEL_PRIZES[segment.id],
     src: segment.src,
     isBlank: segment.id === "sheep",
-  };
+  });
 }
 
 export function appendWheelResult(history, result) {
@@ -26,5 +30,9 @@ export function appendWheelResult(history, result) {
     return history;
   }
 
-  return [...history, result];
+  const immutableResult = Object.isFrozen(result)
+    ? result
+    : Object.freeze({ ...result });
+
+  return [...history, immutableResult];
 }

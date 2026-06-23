@@ -57,7 +57,56 @@ test("createWheelResult marks the sheep result as blank", () => {
   });
 });
 
-test("appendWheelResult keeps at most three confirmed results", () => {
+test("createWheelResult throws for an unknown segment id", () => {
+  assert.throws(
+    () =>
+      createWheelResult({
+        id: "unknown-segment",
+        label: "Unknown",
+        src: "/assets/unknown.png",
+      }),
+    /unknown-segment/,
+  );
+});
+
+test("appendWheelResult returns a new array without changing input history", () => {
+  const first = createWheelResult({
+    id: "pink-elf",
+    label: "Eden",
+    src: "/assets/pink-elf.png",
+  });
+  const history = [first];
+  const second = createWheelResult({
+    id: "lion",
+    label: "Loewe",
+    src: "/assets/lion.png",
+  });
+
+  const updatedHistory = appendWheelResult(history, second);
+
+  assert.notStrictEqual(updatedHistory, history);
+  assert.deepEqual(history, [first]);
+  assert.deepEqual(updatedHistory, [first, second]);
+});
+
+test("appendWheelResult stores a frozen copy of mutable results", () => {
+  const result = {
+    id: "lion",
+    label: "Loewe",
+    prize: "333.000 GIL",
+    src: "/assets/lion.png",
+    isBlank: false,
+  };
+
+  const history = appendWheelResult([], result);
+  result.prize = "changed";
+
+  assert.notStrictEqual(history[0], result);
+  assert.equal(Object.isFrozen(history[0]), true);
+  assert.equal(history[0].prize, "333.000 GIL");
+});
+
+test("appendWheelResult returns the same array after three confirmed results", () => {
   const first = { id: "pink-elf" };
   const second = { id: "lion" };
   const third = { id: "sheep" };
@@ -68,7 +117,6 @@ test("appendWheelResult keeps at most three confirmed results", () => {
   const threeResults = appendWheelResult(twoResults, third);
   const unchangedHistory = appendWheelResult(threeResults, fourth);
 
-  assert.deepEqual(threeResults, [first, second, third]);
   assert.strictEqual(unchangedHistory, threeResults);
 });
 
