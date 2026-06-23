@@ -37,3 +37,13 @@ When implementing from a selected generated mock, treat that image as the source
 - The visual atmosphere should use a subtle jackpot-character hero backdrop with gold spotlights and premium glow accents instead of a flat background, keeping the UI readable while making the birthday jackpot motif more present.
 - The jackpot-character backdrop should stay visible in the initial above-the-fold hero area on load rather than sitting lower in the scrollable payout section.
 - The desktop jackpot motif should live beside the reels as a dedicated full-body character stage rather than as a floating background figure, so the birthday jackpot motif feels anchored and intentional.
+- The wheel game is a separate prize flow from the slot game. Its results never change an in-app balance and do not reuse the slot game's stake or payout logic.
+- Wheel players receive exactly three spins per day/session. After the third result, the game stays closed and must not offer a new-round action.
+- Wheel prizes are fixed labels for later fulfillment in Final Fantasy XIV: Turri = Glam-Item; Alucard = Chocobo-Sattel (Auswahl 100er Trials); Eden = 33 Flasks nach Wahl; Ashelia = 50 Bufffood; Poly = 100.000 GIL; Schaf = Niete; Löwe = 333.000 GIL; Jackpot = 1.250.000 GIL.
+- Every wheel result overlay should show the matching symbol, character name, and exact prize. The session should retain all three results, including sheep losses.
+- The wheel result history should sit directly below the spin button, keeping the action and its outcomes together.
+- The wheel and spin button should form one left-hand unit, with the jackpot stage positioned immediately beside it on desktop.
+- The wheel status panel should span the same usable width as the header through the right edge of the audio utility.
+- The wheel's lion segment uses a red background and the jackpot segment uses a gold background.
+- The wheel audio utility uses action labels: `Ton einschalten` while muted and `Ton ausschalten` while sound is active.
+- Wheel grid children must allow shrinking with `min-width: 0`; on mobile the wheel is capped at `calc(100vw - 32px)`.
