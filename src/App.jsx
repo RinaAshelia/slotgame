@@ -23,6 +23,9 @@ import {
 } from "./gameMath.js";
 import { createRiskDecisionOverlay, createRiskResultOverlay } from "./riskOverlay.js";
 import { useSlotAudio } from "./useSlotAudio.js";
+import { WheelGame } from "./WheelGame.jsx";
+import slotMachineImage from "./assets/slot-machine-transparent.png";
+import gluecksradImage from "./assets/gluecksrad1-transparent-v2.png";
 
 const symbols = [
   {
@@ -371,7 +374,7 @@ function MetricsPanel({ balance, className = "", lastWin, totalStake }) {
   );
 }
 
-export function App() {
+export function SlotGame() {
   const RISK_SELECTION_DELAY_MS = 240;
   const [reels, setReels] = useState([getRandomRows(), getRandomRows(), getRandomRows()]);
   const [balance, setBalance] = useState(400);
@@ -849,6 +852,50 @@ export function App() {
           </div>
         </section>
       ) : null}
+    </main>
+  );
+}
+
+export function App() {
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+
+  if (pathname.startsWith("/slot")) {
+    return <SlotGame />;
+  }
+
+  if (pathname.startsWith("/wheel")) {
+    return <WheelGame />;
+  }
+
+  return (
+    <main className="app-shell hub-shell">
+      <section className="hub-card">
+        <div className="hub-copy">
+          <p className="desktop-kicker">Birthday Games</p>
+          <h1>
+            <span>Wähle dein</span>
+            <span className="hub-headline-accent">Glücksspiel</span>
+          </h1>
+          <p className="hub-tagline">Möge das Glück des GIL-Barons mit dir sein!</p>
+        </div>
+
+        <div className="hub-actions">
+          <a className="hub-tile hub-tile-wheel" href="/wheel">
+            <img alt="Glücksrad Vorschau" className="hub-tile-image hub-tile-image-wheel" src={gluecksradImage} />
+            <div className="hub-tile-copy">
+              <span>Glücksspiel 1</span>
+              <strong>Glücksrad</strong>
+            </div>
+          </a>
+          <a className="hub-tile hub-tile-slot" href="/slot">
+            <img alt="Slotmaschine Vorschau" className="hub-tile-image" src={slotMachineImage} />
+            <div className="hub-tile-copy">
+              <span>Glücksspiel 2</span>
+              <strong>Slotgame</strong>
+            </div>
+          </a>
+        </div>
+      </section>
     </main>
   );
 }
