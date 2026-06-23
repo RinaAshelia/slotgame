@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   appendWheelResult,
   createWheelResult,
+  getWheelAudioLabel,
   TOTAL_WHEEL_SPINS,
   WHEEL_PRIZES,
 } from "./wheelGameModel.js";
@@ -122,4 +123,9 @@ test("appendWheelResult returns the same array after three confirmed results", (
 
 test("wheel sessions allow exactly three spins", () => {
   assert.equal(TOTAL_WHEEL_SPINS, 3);
+});
+
+test("audio label describes the action the button performs", () => {
+  assert.equal(getWheelAudioLabel(true), "Ton einschalten");
+  assert.equal(getWheelAudioLabel(false), "Ton ausschalten");
 });

@@ -11,6 +11,10 @@ export const WHEEL_PRIZES = Object.freeze({
 
 export const TOTAL_WHEEL_SPINS = 3;
 
+export function getWheelAudioLabel(isMuted) {
+  return isMuted ? "Ton einschalten" : "Ton ausschalten";
+}
+
 export function createWheelResult(segment) {
   if (!Object.hasOwn(WHEEL_PRIZES, segment.id)) {
     throw new Error(`Unknown wheel segment id: ${segment.id}`);
