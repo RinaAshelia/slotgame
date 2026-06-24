@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ergebnis-Historie</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Avenir Next Condensed", "Trebuchet MS", sans-serif;
+      background: #100504;
+      color: #f7dfaa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px;
+      background: radial-gradient(circle at 10% 0%, rgba(145,18,12,.35), transparent 28%), linear-gradient(#180806,#0c0303);
+    }
+    h1,h2,p { margin: 0; }
+    header,.options { max-width: 1440px; margin-inline: auto; }
+    header { margin-bottom: 22px; }
+    h1 { color:#f8e8c2; font-family:"Iowan Old Style","Palatino Linotype",serif; font-size:clamp(2rem,4vw,3.4rem); }
+    header p { margin-top:8px; color:rgba(247,223,170,.76); }
+    .options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+    .option { min-width:0; padding:14px; border:1px solid rgba(255,205,118,.22); border-radius:8px; background:#1c0906; cursor:pointer; }
+    .option:hover,.option.selected { border-color:#e8b44f; box-shadow:0 0 0 2px rgba(232,180,79,.2); }
+    .head { display:flex; gap:10px; align-items:center; margin-bottom:12px; }
+    .letter { width:30px; height:30px; display:grid; place-items:center; border-radius:50%; background:#d99b31; color:#2b1006; font-weight:900; }
+    h2 { color:#fff0c8; font-size:1.05rem; }
+    .head p,.note { color:rgba(247,223,170,.68); font-size:.76rem; line-height:1.4; }
+    .screen { padding:10px; border:1px solid rgba(255,205,118,.14); border-radius:6px; background:linear-gradient(#250b07,#110504); }
+    .top { display:flex; justify-content:space-between; align-items:center; padding-bottom:7px; font-family:"Iowan Old Style",serif; font-size:.72rem; }
+    .pills { display:flex; gap:3px; }
+    .pill { padding:4px 6px; border:1px solid rgba(255,205,118,.18); border-radius:999px; font:700 .44rem sans-serif; }
+    .status { min-height:38px; margin-bottom:8px; padding:7px; border:1px solid rgba(255,205,118,.15); border-radius:5px; background:rgba(255,226,170,.05); font-size:.5rem; }
+    .game { display:grid; grid-template-columns:minmax(0,1fr) 31%; gap:7px; }
+    .wheel-col { min-width:0; display:grid; gap:6px; justify-items:center; align-content:start; }
+    .wheel { width:100%; max-width:210px; aspect-ratio:1; object-fit:contain; }
+    .stage { display:grid; align-content:end; justify-items:center; min-width:0; padding:5px; border:1px solid rgba(255,205,118,.18); border-radius:5px; }
+    .stage img { width:100%; max-height:180px; object-fit:contain; }
+    .stage strong { padding:4px; color:#ffd980; font-size:.5rem; }
+    .button { width:94%; min-height:30px; display:grid; place-items:center; border-radius:5px; background:linear-gradient(#f1bc4d,#b86d17); color:#2e1308; font-size:.56rem; font-weight:900; }
+    .history { width:100%; display:grid; gap:4px; padding:6px; border:1px solid rgba(255,205,118,.13); border-radius:5px; background:rgba(255,226,170,.035); }
+    .history-title { color:#d9ae63; font-size:.46rem; font-weight:900; text-transform:uppercase; }
+    .row { display:grid; grid-template-columns:24px 1fr; align-items:center; gap:5px; min-height:28px; padding:3px 5px; border-radius:4px; background:rgba(255,255,255,.035); font-size:.48rem; }
+    .row img { width:24px; height:24px; object-fit:contain; }
+    .row strong { display:block; color:#fff0c8; }
+    .row span { color:rgba(247,223,170,.7); }
+    .option-b .history { grid-column:1/-1; margin-top:7px; }
+    .option-c .status { display:grid; grid-template-columns:1fr 44%; gap:6px; }
+    .option-c .history { padding:4px; }
+    .option-c .row { min-height:20px; grid-template-columns:18px 1fr; font-size:.4rem; }
+    .option-c .row img { width:18px; height:18px; }
+    .note { margin-top:10px; }
+    @media(max-width:900px){ .options{grid-template-columns:1fr;} .wheel{max-width:330px;} }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Wo stehen die drei Tagesergebnisse?</h1>
+    <p>Jede Zeile zeigt Symbol, Charakter und den konkreten FFXIV-Preis; auch „Schaf – Niete“ bleibt sichtbar.</p>
+  </header>
+  <main class="options">
+    <article class="option selected" data-choice="a" onclick="choose(this)">
+      <div class="head"><div class="letter">A</div><div><h2>Direkt unter dem Drehbutton</h2><p>Empfohlen</p></div></div>
+      <div class="screen">
+        <div class="top"><span>LUCK SLOTS WHEEL</span><div class="pills"><span class="pill">Start</span><span class="pill">Slotgame</span><span class="pill">Ton einschalten</span></div></div>
+        <div class="status">Status und Kurzregeln über die volle Headerbreite</div>
+        <div class="game">
+          <div class="wheel-col">
+            <img class="wheel" src="http://127.0.0.1:5176/src/assets/gluecksrad1-transparent-v2.png" alt="Glücksrad">
+            <div class="button">JETZT DREHEN · 1 ÜBRIG</div>
+            <div class="history">
+              <div class="history-title">Deine Drehungen heute</div>
+              <div class="row"><img src="http://127.0.0.1:5176/src/assets/wheel-turri.png" alt=""><div><strong>Turri</strong><span>Glam-Item</span></div></div>
+              <div class="row"><img src="http://127.0.0.1:5176/src/assets/wheel-sheep.png" alt=""><div><strong>Schaf</strong><span>Niete</span></div></div>
+            </div>
+          </div>
+          <div class="stage"><img src="http://127.0.0.1:5176/src/assets/jackpot-gold-boy.png" alt=""><strong>JACKPOT · 1.250.000 GIL</strong></div>
+        </div>
+      </div>
+      <p class="note">Stärkster Bezug zur Aktion. Die Liste wächst nach jedem Dreh und bleibt auf Mobilgeräten unmittelbar im Ablauf.</p>
+    </article>
+
+    <article class="option option-b" data-choice="b" onclick="choose(this)">
+      <div class="head"><div class="letter">B</div><div><h2>Unter Rad und Jackpot-Bühne</h2><p>Ruhiger, aber weiter entfernt</p></div></div>
+      <div class="screen">
+        <div class="top"><span>LUCK SLOTS WHEEL</span><div class="pills"><span class="pill">Start</span><span class="pill">Slotgame</span><span class="pill">Ton einschalten</span></div></div>
+        <div class="status">Status und Kurzregeln über die volle Headerbreite</div>
+        <div class="game">
+          <div class="wheel-col"><img class="wheel" src="http://127.0.0.1:5176/src/assets/gluecksrad1-transparent-v2.png" alt=""><div class="button">JETZT DREHEN · 1 ÜBRIG</div></div>
+          <div class="stage"><img src="http://127.0.0.1:5176/src/assets/jackpot-gold-boy.png" alt=""><strong>JACKPOT · 1.250.000 GIL</strong></div>
+          <div class="history">
+            <div class="history-title">Deine Drehungen heute</div>
+            <div class="row"><img src="http://127.0.0.1:5176/src/assets/wheel-turri.png" alt=""><div><strong>Turri</strong><span>Glam-Item</span></div></div>
+            <div class="row"><img src="http://127.0.0.1:5176/src/assets/wheel-sheep.png" alt=""><div><strong>Schaf</strong><span>Niete</span></div></div>
+          </div>
+        </div>
+      </div>
+      <p class="note">Gibt der Historie mehr Breite, verlängert aber die gesamte Seite und trennt sie vom Drehbutton.</p>
+    </article>
+
+    <article class="option option-c" data-choice="c" onclick="choose(this)">
+      <div class="head"><div class="letter">C</div><div><h2>Im Statusbereich</h2><p>Oben sichtbar, aber dichter</p></div></div>
+      <div class="screen">
+        <div class="top"><span>LUCK SLOTS WHEEL</span><div class="pills"><span class="pill">Start</span><span class="pill">Slotgame</span><span class="pill">Ton einschalten</span></div></div>
+        <div class="status"><span>Status und Kurzregeln</span><div class="history"><div class="row"><img src="http://127.0.0.1:5176/src/assets/wheel-turri.png" alt=""><div><strong>Turri</strong><span>Glam-Item</span></div></div><div class="row"><img src="http://127.0.0.1:5176/src/assets/wheel-sheep.png" alt=""><div><strong>Schaf</strong><span>Niete</span></div></div></div></div>
+        <div class="game">
+          <div class="wheel-col"><img class="wheel" src="http://127.0.0.1:5176/src/assets/gluecksrad1-transparent-v2.png" alt=""><div class="button">JETZT DREHEN · 1 ÜBRIG</div></div>
+          <div class="stage"><img src="http://127.0.0.1:5176/src/assets/jackpot-gold-boy.png" alt=""><strong>JACKPOT · 1.250.000 GIL</strong></div>
+        </div>
+      </div>
+      <p class="note">Ergebnisse sind früh sichtbar, konkurrieren aber mit Status und Regeln und werden auf kleinen Displays schnell unruhig.</p>
+    </article>
+  </main>
+  <script>
+    function choose(element) {
+      document.querySelectorAll(".option").forEach(option => option.classList.remove("selected"));
+      element.classList.add("selected");
+      if (window.recordChoice) window.recordChoice(element.dataset.choice, element.querySelector("h2").textContent);
+    }
+  </script>
+</body>
+</html>

@@ -301,14 +301,18 @@
 .wheel-app-shell .wheel-stage-shell {
   display: grid;
   gap: 10px;
-  justify-items: stretch;
+  justify-items: center;
 }
 
 .wheel-stage-row {
   display: grid;
-  grid-template-columns: minmax(0, 0.94fr) 272px;
+  width: 100%;
+  max-width: 1014px;
+  margin: 0 auto;
+  grid-template-columns: minmax(0, 720px) 272px;
   gap: 22px;
   align-items: stretch;
+  justify-content: center;
 }
 
 .wheel-stage {

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glücksrad Layout-Varianten</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Avenir Next Condensed", "Trebuchet MS", sans-serif;
+      background: #100504;
+      color: #f7dfaa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 28px;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(145, 18, 12, 0.35), transparent 28%),
+        linear-gradient(180deg, #180806, #0c0303);
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    header {
+      max-width: 1440px;
+      margin: 0 auto 22px;
+    }
+
+    h1 {
+      color: #f8e8c2;
+      font-family: "Iowan Old Style", "Palatino Linotype", serif;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+    }
+
+    header p {
+      margin-top: 8px;
+      color: rgba(247, 223, 170, 0.78);
+    }
+
+    .options {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .option {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid rgba(255, 205, 118, 0.22);
+      border-radius: 8px;
+      background: rgba(28, 9, 6, 0.96);
+      cursor: pointer;
+    }
+
+    .option:hover,
+    .option.selected {
+      border-color: #e8b44f;
+      box-shadow: 0 0 0 2px rgba(232, 180, 79, 0.2);
+    }
+
+    .option-head {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .letter {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #d99b31;
+      color: #2b1006;
+      font-weight: 900;
+    }
+
+    .option h2 {
+      color: #fff0c8;
+      font-size: 1.1rem;
+    }
+
+    .option-head p {
+      margin-top: 2px;
+      font-size: 0.78rem;
+      color: rgba(247, 223, 170, 0.68);
+    }
+
+    .screen {
+      padding: 12px;
+      border: 1px solid rgba(255, 205, 118, 0.14);
+      border-radius: 6px;
+      background: linear-gradient(180deg, #250b07, #110504);
+    }
+
+    .screen-header,
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .screen-header {
+      min-height: 34px;
+      padding-bottom: 8px;
+      color: #fff0c8;
+      font-family: "Iowan Old Style", "Palatino Linotype", serif;
+      font-size: 0.82rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .pill {
+      padding: 5px 7px;
+      border: 1px solid rgba(255, 205, 118, 0.2);
+      border-radius: 999px;
+      color: #f7dfaa;
+      font: 700 0.5rem/1 sans-serif;
+    }
+
+    .status {
+      min-height: 46px;
+      margin-bottom: 10px;
+      padding: 8px;
+      border: 1px solid rgba(255, 205, 118, 0.16);
+      border-radius: 6px;
+      background: rgba(255, 226, 170, 0.05);
+      font-size: 0.55rem;
+    }
+
+    .game-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 32%;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .wheel-group {
+      min-width: 0;
+      display: grid;
+      gap: 7px;
+      justify-items: center;
+    }
+
+    .wheel {
+      width: 100%;
+      max-width: 250px;
+      aspect-ratio: 1;
+      object-fit: contain;
+    }
+
+    .stage {
+      min-width: 0;
+      display: grid;
+      align-content: end;
+      justify-items: center;
+      padding: 6px;
+      border: 1px solid rgba(255, 205, 118, 0.2);
+      border-radius: 6px;
+      background: linear-gradient(180deg, rgba(255, 204, 99, 0.05), #180705);
+    }
+
+    .stage img {
+      width: 100%;
+      max-height: 205px;
+      object-fit: contain;
+    }
+
+    .stage strong {
+      padding: 5px;
+      color: #ffd980;
+      font-size: 0.58rem;
+      text-align: center;
+    }
+
+    .button {
+      width: 92%;
+      min-height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background: linear-gradient(#f1bc4d, #b86d17);
+      color: #2e1308;
+      font-weight: 900;
+      font-size: 0.66rem;
+    }
+
+    .option-b .button {
+      grid-column: 1 / -1;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .option-c .game-grid {
+      grid-template-columns: minmax(0, 1fr) 36%;
+    }
+
+    .option-c .wheel-group {
+      grid-template-columns: minmax(0, 1fr) 54px;
+      align-items: center;
+    }
+
+    .option-c .button {
+      width: 54px;
+      height: 100%;
+      min-height: 120px;
+      padding: 5px;
+      text-align: center;
+    }
+
+    .recommendation {
+      margin-top: 10px;
+      color: rgba(247, 223, 170, 0.78);
+      font-size: 0.76rem;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 900px) {
+      .options { grid-template-columns: 1fr; }
+      .wheel { max-width: 360px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Glücksrad: kleine Layout-Korrektur</h1>
+    <p>Alle Varianten behalten Stil, Inhalte und die tägliche Begrenzung auf drei Drehungen bei.</p>
+  </header>
+
+  <div class="options">
+    <article class="option selected" data-choice="a" onclick="selectOption(this)">
+      <div class="option-head">
+        <div class="letter">A</div>
+        <div>
+          <h2>Button direkt unter dem Rad</h2>
+          <p>Empfohlen</p>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="screen-header">
+          <span>LUCK SLOTS WHEEL</span>
+          <div class="actions"><span class="pill">Start</span><span class="pill">Slotgame</span><span class="pill">Ton einschalten</span></div>
+        </div>
+        <div class="status"><span>Status und Kurzregeln über die volle Headerbreite</span><span>3 Drehungen täglich</span></div>
+        <div class="game-grid">
+          <div class="wheel-group">
+            <img class="wheel" src="http://127.0.0.1:5176/src/assets/gluecksrad1-transparent-v2.png" alt="Glücksrad">
+            <div class="button">JETZT DREHEN · 3 ÜBRIG</div>
+          </div>
+          <div class="stage">
+            <img src="http://127.0.0.1:5176/src/assets/jackpot-gold-boy.png" alt="Jackpot-Figur">
+            <strong>1.250.000 GIL</strong>
+          </div>
+        </div>
+      </div>
+      <p class="recommendation">Rad und Aktion bilden eine klare Einheit. Die Bühne sitzt unmittelbar daneben; mobil stapeln Rad, Button und Bühne stabil.</p>
+    </article>
+
+    <article class="option option-b" data-choice="b" onclick="selectOption(this)">
+      <div class="option-head">
+        <div class="letter">B</div>
+        <div>
+          <h2>Gemeinsame Aktionsleiste</h2>
+          <p>Breiter, aber weniger eindeutig</p>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="screen-header">
+          <span>LUCK SLOTS WHEEL</span>
+          <div class="actions"><span class="pill">Start</span><span class="pill">Slotgame</span><span class="pill">Ton einschalten</span></div>
+        </div>
+        <div class="status"><span>Status und Kurzregeln über die volle Headerbreite</span><span>3 Drehungen täglich</span></div>
+        <div class="game-grid">
+          <div class="wheel-group">
+            <img class="wheel" src="http://127.0.0.1:5176/src/assets/gluecksrad1-transparent-v2.png" alt="Glücksrad">
+          </div>
+          <div class="stage">
+            <img src="http://127.0.0.1:5176/src/assets/jackpot-gold-boy.png" alt="Jackpot-Figur">
+            <strong>1.250.000 GIL</strong>
+          </div>
+          <div class="button">JETZT DREHEN · 3 ÜBRIG</div>
+        </div>
+      </div>
+      <p class="recommendation">Der Button schließt die gesamte Spielgruppe ab. Er wirkt präsent, gehört visuell aber nicht mehr so eindeutig zum Rad.</p>
+    </article>
+
+    <article class="option option-c" data-choice="c" onclick="selectOption(this)">
+      <div class="option-head">
+        <div class="letter">C</div>
+        <div>
+          <h2>Vertikale Aktion am Rad</h2>
+          <p>Kompakt, jedoch ungewohnt</p>
+        </div>
+      </div>
+      <div class="screen">
+        <div class="screen-header">
+          <span>LUCK SLOTS WHEEL</span>
+          <div class="actions"><span class="pill">Start</span><span class="pill">Slotgame</span><span class="pill">Ton einschalten</span></div>
+        </div>
+        <div class="status"><span>Status und Kurzregeln über die volle Headerbreite</span><span>3 Drehungen täglich</span></div>
+        <div class="game-grid">
+          <div class="wheel-group">
+            <img class="wheel" src="http://127.0.0.1:5176/src/assets/gluecksrad1-transparent-v2.png" alt="Glücksrad">
+            <div class="button">JETZT DREHEN</div>
+          </div>
+          <div class="stage">
+            <img src="http://127.0.0.1:5176/src/assets/jackpot-gold-boy.png" alt="Jackpot-Figur">
+            <strong>1.250.000 GIL</strong>
+          </div>
+        </div>
+      </div>
+      <p class="recommendation">Spart Höhe, bricht aber mit dem etablierten horizontalen Buttonmuster und bietet mobil die schwächste Lösung.</p>
+    </article>
+  </div>
+
+  <script>
+    function selectOption(element) {
+      document.querySelectorAll(".option").forEach((option) => option.classList.remove("selected"));
+      element.classList.add("selected");
+      if (window.recordChoice) {
+        window.recordChoice(element.dataset.choice, element.querySelector("h2").textContent);
+      }
+    }
+  </script>
+</body>
+</html>
