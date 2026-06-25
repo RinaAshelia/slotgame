@@ -14,7 +14,8 @@ When implementing from a selected generated mock, treat that image as the source
 - Jackpot motif: gold-suited white wolf/cat boy with top hat and cash.
 - Interaction expectation: fully interactive 3-reel slot machine with spin animation, win logic, adjustable bet, and jackpot state on a single visible middle payline.
 - Desktop should expose the same adjustable bet and round metrics (balance, last win, total stake) already shown on tablet/mobile.
-- Start balance should stay tight to the default round stake, targeting roughly 30-35 default spins instead of a very long session.
+- Start balance stays fixed at `400 GIL`; the longer session is intentional even after the fun-profile rebalance.
+- Slot outcome profile targets `24%` total hits, roughly `16%` profitable hits, `9%` near misses, and `92%` theoretical RTP across every supported stake.
 - All player-facing currency and stake displays should use `GIL`, not `€`.
 - Jackpot display and jackpot payout stay fixed at `1.250.000,00 GIL`, independent of the current bet.
 - The regular bet ladder should support higher-risk values above `10 GIL`; current target ladder is `2.5 / 5 / 10 / 25 / 50 / 100 GIL`.

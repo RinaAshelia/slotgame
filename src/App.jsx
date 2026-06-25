@@ -15,6 +15,7 @@ import {
   BASE_SYMBOL_PAYOUTS,
   BET_OPTIONS,
   JACKPOT_AMOUNT,
+  START_BALANCE,
   canOfferRiskChoice,
   getOutcomeKind,
   getRoundStake,
@@ -409,7 +410,7 @@ function MetricsPanel({ balance, className = "", lastWin, totalStake }) {
 export function SlotGame() {
   const RISK_SELECTION_DELAY_MS = 240;
   const [reels, setReels] = useState([getRandomRows(), getRandomRows(), getRandomRows()]);
-  const [balance, setBalance] = useState(400);
+  const [balance, setBalance] = useState(START_BALANCE);
   const [lastWin, setLastWin] = useState(0);
   const [bet, setBet] = useState(2.5);
   const [isSpinning, setIsSpinning] = useState(false);

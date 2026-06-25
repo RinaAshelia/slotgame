@@ -5,8 +5,8 @@ import {
   BASE_SYMBOL_PAYOUTS,
   BET_OPTIONS,
   JACKPOT_AMOUNT,
-  REGULAR_OUTCOME_PROFILE,
   RISK_TRIGGER_MULTIPLIER,
+  START_BALANCE,
   canOfferRiskChoice,
   getOutcomeProfile,
   getPayoutMultiplier,
@@ -17,10 +17,35 @@ import {
   getSymbolPayout,
 } from "./gameMath.js";
 
+const WINNING_SYMBOL_IDS = [
+  "jackpot",
+  "lion",
+  "white-wolf",
+  "dark-wolf",
+  "pink-elf",
+  "blonde-cat",
+  "blonde-heart",
+  "sheep",
+];
+
+function getProfileRtp(stake) {
+  const profile = getOutcomeProfile(stake);
+  const expectedPayout = WINNING_SYMBOL_IDS.reduce(
+    (sum, symbolId) => sum + profile[symbolId] * getSymbolPayout(symbolId, stake),
+    0,
+  );
+
+  return expectedPayout / stake;
+}
+
 test("base bet keeps the configured base payout values", () => {
   assert.equal(getPayoutMultiplier(2.5), 1);
   assert.equal(getSymbolPayout("lion", 2.5), BASE_SYMBOL_PAYOUTS.lion);
   assert.equal(getRoundStake(2.5), 2.5);
+});
+
+test("slot sessions retain the 400 GIL starting balance", () => {
+  assert.equal(START_BALANCE, 400);
 });
 
 test("regular bet ladder now supports meaningful values above 10 GIL", () => {
@@ -92,47 +117,43 @@ test("risk choice is only offered for eligible symbols and never for sheep", () 
   assert.equal(canOfferRiskChoice("jackpot", JACKPOT_AMOUNT, 2.5), true);
 });
 
-test("balanced outcome profile now targets roughly a 16.5 percent hit rate with fewer near misses", () => {
-  const winningSymbols = [
-    "jackpot",
-    "lion",
-    "white-wolf",
-    "dark-wolf",
-    "pink-elf",
-    "blonde-cat",
-    "blonde-heart",
-    "sheep",
-  ];
-  const profile = getOutcomeProfile(2.5);
-  const hitRate = winningSymbols.reduce((sum, symbolId) => sum + profile[symbolId], 0);
+test("fun profile targets a 24 percent hit rate with 9 percent near misses", () => {
+  for (const stake of BET_OPTIONS) {
+    const profile = getOutcomeProfile(stake);
+    const hitRate = WINNING_SYMBOL_IDS.reduce((sum, symbolId) => sum + profile[symbolId], 0);
 
-  assert.equal(Number(hitRate.toFixed(6)), 0.165);
-  assert.equal(Number(profile.nearMiss.toFixed(3)), 0.155);
+    assert.equal(Number(hitRate.toFixed(6)), 0.24);
+    assert.equal(Number(profile.nearMiss.toFixed(6)), 0.09);
+    assert.equal(Number(profile.mixed.toFixed(6)), 0.67);
+  }
 });
 
-test("higher stakes lightly boost premium-hit frequency from 25 GIL upward", () => {
-  const premiumSymbols = ["jackpot", "lion", "white-wolf", "dark-wolf", "pink-elf", "blonde-cat"];
-  const winningSymbols = [
-    "jackpot",
-    "lion",
-    "white-wolf",
-    "dark-wolf",
-    "pink-elf",
-    "blonde-cat",
-    "blonde-heart",
-    "sheep",
-  ];
-  const baseProfile = getOutcomeProfile(10);
-  const highStakeProfile = getOutcomeProfile(50);
-  const basePremiumRate = premiumSymbols.reduce((sum, symbolId) => sum + baseProfile[symbolId], 0);
-  const highStakePremiumRate = premiumSymbols.reduce((sum, symbolId) => sum + highStakeProfile[symbolId], 0);
-  const baseHitRate = winningSymbols.reduce((sum, symbolId) => sum + baseProfile[symbolId], 0);
-  const highStakeHitRate = winningSymbols.reduce((sum, symbolId) => sum + highStakeProfile[symbolId], 0);
+test("fun profile produces a profitable result on roughly 16 percent of spins", () => {
+  for (const stake of BET_OPTIONS) {
+    const profile = getOutcomeProfile(stake);
+    const profitableHitRate = WINNING_SYMBOL_IDS.filter((symbolId) => symbolId !== "sheep").reduce(
+      (sum, symbolId) => sum + profile[symbolId],
+      0,
+    );
 
-  assert.equal(baseProfile.jackpot, highStakeProfile.jackpot);
-  assert.equal(Number(baseHitRate.toFixed(6)), Number(highStakeHitRate.toFixed(6)));
-  assert.equal(Number(baseHitRate.toFixed(6)), 0.165);
-  assert.equal(Number(highStakePremiumRate.toFixed(6)) > Number(basePremiumRate.toFixed(6)), true);
+    assert.equal(profitableHitRate >= 0.16 && profitableHitRate <= 0.161, true);
+  }
+});
+
+test("fun profile returns 92 percent theoretically at every supported stake", () => {
+  for (const stake of BET_OPTIONS) {
+    assert.equal(Number(getProfileRtp(stake).toFixed(6)), 0.92);
+  }
+});
+
+test("jackpot probability scales with stake to preserve its RTP contribution", () => {
+  const baseProfile = getOutcomeProfile(2.5);
+  const highProfile = getOutcomeProfile(100);
+  const baseContribution = (baseProfile.jackpot * JACKPOT_AMOUNT) / 2.5;
+  const highContribution = (highProfile.jackpot * JACKPOT_AMOUNT) / 100;
+
+  assert.equal(Number(baseContribution.toFixed(6)), 0.1);
+  assert.equal(Number(highContribution.toFixed(6)), 0.1);
 });
 
 test("taking the safe option returns the open win unchanged", () => {

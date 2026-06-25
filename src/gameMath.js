@@ -1,5 +1,6 @@
 export const JACKPOT_AMOUNT = 1250000;
 export const BASE_BET = 2.5;
+export const START_BALANCE = 400;
 export const RISK_TRIGGER_MULTIPLIER = 4;
 export const RISK_ELIGIBLE_SYMBOL_IDS = new Set([
   "blonde-cat",
@@ -23,30 +24,17 @@ export const BASE_SYMBOL_PAYOUTS = {
   sheep: 2.5,
 };
 
-const regularProfileBase = {
-  jackpot: 0.0000004,
-  lion: 0.0014,
-  "white-wolf": 0.0028,
-  "dark-wolf": 0.0075,
-  "pink-elf": 0.02,
-  "blonde-cat": 0.034,
-  "blonde-heart": 0.043,
-  sheep: 0.0563,
-  nearMiss: 0.155,
-};
+const TARGET_HIT_RATE = 0.24;
+const TARGET_RTP = 0.92;
+const JACKPOT_RTP_SHARE = 0.1;
+const NEAR_MISS_RATE = 0.09;
 
-const HIGH_STAKE_PREMIUM_BOOST_BY_STAKE = new Map([
-  [25, 0.004],
-  [50, 0.008],
-  [100, 0.012],
-]);
-
-const PREMIUM_BOOST_WEIGHTS = {
-  lion: 0.08,
-  "white-wolf": 0.14,
-  "dark-wolf": 0.18,
-  "pink-elf": 0.25,
-  "blonde-cat": 0.35,
+const fixedOutcomeProfile = {
+  lion: 0.0015,
+  "white-wolf": 0.004,
+  "dark-wolf": 0.01,
+  "pink-elf": 0.03,
+  "blonde-heart": 0.07,
 };
 
 function withMixedOutcome(profile) {
@@ -57,49 +45,28 @@ function withMixedOutcome(profile) {
   };
 }
 
-export const REGULAR_OUTCOME_PROFILE = withMixedOutcome(regularProfileBase);
-
-function getPremiumBoostForStake(stake) {
-  if (stake >= 100) {
-    return HIGH_STAKE_PREMIUM_BOOST_BY_STAKE.get(100);
-  }
-
-  if (stake >= 50) {
-    return HIGH_STAKE_PREMIUM_BOOST_BY_STAKE.get(50);
-  }
-
-  if (stake >= 25) {
-    return HIGH_STAKE_PREMIUM_BOOST_BY_STAKE.get(25);
-  }
-
-  return 0;
-}
-
-function applyHighStakePremiumBoost(profile, boost) {
-  if (boost <= 0) {
-    return profile;
-  }
-
-  const adjustedProfile = { ...profile };
-
-  for (const [symbolId, weight] of Object.entries(PREMIUM_BOOST_WEIGHTS)) {
-    adjustedProfile[symbolId] += boost * weight;
-  }
-
-  adjustedProfile["blonde-heart"] -= boost * 0.45;
-  adjustedProfile.sheep -= boost * 0.55;
-
-  return adjustedProfile;
-}
-
 export function getOutcomeProfile(stake = BASE_BET) {
-  const premiumBoost = getPremiumBoostForStake(stake);
+  const safeStake = Number.isFinite(stake) && stake > 0 ? stake : BASE_BET;
+  const jackpot = (JACKPOT_RTP_SHARE * safeStake) / JACKPOT_AMOUNT;
+  const fixedHitRate = Object.values(fixedOutcomeProfile).reduce((sum, chance) => sum + chance, 0);
+  const fixedRtp =
+    fixedOutcomeProfile.lion * (BASE_SYMBOL_PAYOUTS.lion / BASE_BET) +
+    fixedOutcomeProfile["white-wolf"] * (BASE_SYMBOL_PAYOUTS["white-wolf"] / BASE_BET) +
+    fixedOutcomeProfile["dark-wolf"] * (BASE_SYMBOL_PAYOUTS["dark-wolf"] / BASE_BET) +
+    fixedOutcomeProfile["pink-elf"] * (BASE_SYMBOL_PAYOUTS["pink-elf"] / BASE_BET) +
+    fixedOutcomeProfile["blonde-heart"] * (BASE_SYMBOL_PAYOUTS["blonde-heart"] / BASE_BET);
+  const remainingHitRate = TARGET_HIT_RATE - jackpot - fixedHitRate;
+  const remainingRtp = TARGET_RTP - JACKPOT_RTP_SHARE - fixedRtp;
+  const blondeCat = (remainingRtp - remainingHitRate) / 3;
+  const sheep = remainingHitRate - blondeCat;
 
-  if (premiumBoost <= 0) {
-    return REGULAR_OUTCOME_PROFILE;
-  }
-
-  return withMixedOutcome(applyHighStakePremiumBoost(regularProfileBase, premiumBoost));
+  return withMixedOutcome({
+    jackpot,
+    ...fixedOutcomeProfile,
+    "blonde-cat": blondeCat,
+    sheep,
+    nearMiss: NEAR_MISS_RATE,
+  });
 }
 
 export function getPayoutMultiplier(stake, options = {}) {
