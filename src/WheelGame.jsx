@@ -16,6 +16,7 @@ import {
   createWheelResult,
   getWheelAudioLabel,
 } from "./wheelGameModel.js";
+import { getWheelSpinAudioPlan } from "./wheelAudio.js";
 
 const SEGMENTS = [
   { id: "jackpot", label: "Jackpot", prize: WHEEL_PRIZES.jackpot, src: jackpotGoldBoy, tone: "is-jackpot" },
@@ -34,9 +35,9 @@ const POINTER_DEG = 90;
 const WHEEL_SIZE = 1000;
 const WHEEL_CENTER = WHEEL_SIZE / 2;
 const WHEEL_RADIUS = 434;
-const SEGMENT_IMAGE_RADIUS = 270;
+const SEGMENT_IMAGE_RADIUS = 258;
 const SEGMENT_IMAGE_SIZE = 150;
-const SEGMENT_LABEL_RADIUS = 346;
+const SEGMENT_LABEL_RADIUS = 358;
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
@@ -222,7 +223,7 @@ export function WheelGame() {
   const [status, setStatus] = useState("Du hast drei Chancen, den Gilbaron zu beeindrucken.");
   const timersRef = useRef([]);
   const confirmButtonRef = useRef(null);
-  const { isMuted, playCue, toggleMute } = useSlotAudio();
+  const { isMuted, playCue, startLoop, stopLoop, stopAllLoops, toggleMute } = useSlotAudio();
 
   const canSpin = !isSpinning && !overlayResult && spinsLeft > 0;
 
@@ -230,6 +231,7 @@ export function WheelGame() {
     return () => {
       timersRef.current.forEach((timer) => window.clearTimeout(timer));
       timersRef.current = [];
+      stopAllLoops();
     };
   }, []);
 
@@ -242,6 +244,7 @@ export function WheelGame() {
   function clearTimers() {
     timersRef.current.forEach((timer) => window.clearTimeout(timer));
     timersRef.current = [];
+    stopAllLoops();
   }
 
   function doSpin() {
@@ -253,6 +256,7 @@ export function WheelGame() {
     const segment = pickSegment();
     const result = createWheelResult(segment);
     const nextRotation = getRotation(TOTAL_WHEEL_SPINS - spinsLeft + 4, SEGMENTS.indexOf(segment));
+    const audioPlan = getWheelSpinAudioPlan(result);
 
     setSpinsLeft((current) => current - 1);
     setIsSpinning(true);
@@ -261,10 +265,12 @@ export function WheelGame() {
     setPendingResult(result);
     setOverlayResult(null);
     setStatus("Das Rad läuft. Bitte warten, bis es steht.");
-    void playCue("spinStart");
+    void playCue(audioPlan.start[0]);
+    void startLoop(audioPlan.start[1]);
 
     timersRef.current.push(
       window.setTimeout(() => {
+        stopLoop("spinLoop");
         void playCue("reelStop");
       }, SPIN_DURATION_MS - 700),
     );
@@ -277,7 +283,7 @@ export function WheelGame() {
             ? "Schaf getroffen. Diesmal ist es eine Niete."
             : `${result.label} getroffen: ${result.prize}.`,
         );
-        void playCue(result.id === "jackpot" ? "jackpot" : result.isBlank ? "featureTrigger" : "win");
+        void playCue(audioPlan.stop[1]);
       }, SPIN_DURATION_MS),
     );
 
@@ -381,7 +387,7 @@ export function WheelGame() {
                   <div className="wheel-jackpot-copy">
                     <span>JACKPOT-BÜHNE</span>
                     <strong>Gil-Baron</strong>
-                    <p>Der Sondergewinn bleibt immer sichtbar inszeniert.</p>
+                    <p className="wheel-jackpot-quote">"1.250.000 GIL warten auf dich!"</p>
                   </div>
                   <img alt="Jackpot Gold Boy" className="wheel-jackpot-image" src={jackpotGoldBoy} />
                   <div className="wheel-jackpot-amount">{WHEEL_PRIZES.jackpot}</div>

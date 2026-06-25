@@ -43,6 +43,7 @@ When implementing from a selected generated mock, treat that image as the source
 - Every wheel result overlay should show the matching symbol, character name, and exact prize. The session should retain all three results, including sheep losses.
 - The wheel result history should sit directly below the spin button, keeping the action and its outcomes together.
 - The wheel and spin button should form one left-hand unit, with the jackpot stage positioned immediately beside it on desktop.
+- On desktop, the combined wheel-and-jackpot-stage cluster should sit centered under the full-width header/status region rather than reading as left-aligned.
 - The wheel status panel should span the same usable width as the header through the right edge of the audio utility.
 - The wheel's lion segment uses a red background and the jackpot segment uses a gold background.
 - The wheel audio utility uses action labels: `Ton einschalten` while muted and `Ton ausschalten` while sound is active.
