@@ -28,13 +28,16 @@ When implementing from a selected generated mock, treat that image as the source
 - Metrics hierarchy should prioritize current balance and round stake over last win.
 - The balanced mode uses three fixed horizontal paylines (top, middle, bottom) with no line selector or diagonal payouts.
 - Jackpot wins stay exclusive to the middle row even though the other two horizontal rows also pay normally.
+- Losing slot outcomes use visual-only jackpot teasers: roughly `8%` show one jackpot symbol and `1%` show two, without changing jackpot win probability, hit rate, or RTP.
 - Wins are routed into `Schaf oder Loewe` once they are worth at least `4x` the current stake, starting at `Turri` and above on the base ladder.
 - The risk choice appears as a blocking overlay, keeps the win uncredited until resolved, and also applies to jackpot wins.
 - The risk overlay should show both sheep and lion motifs already in the question state, then keep a visible result state with the matching motif until the player closes it.
 - Premium-casino audio should be synthesized in-browser first, with a visible mute toggle and initial cues for spin start, reel stop, regular win, feature trigger, risk resolution, and jackpot.
 - The sound toggle should live as a right-aligned utility control in the hero/header rather than centered in the title stack.
+- The slot header should mirror the wheel header navigation with `Start`, `Glücksrad`, and the sound utility grouped together on desktop and mobile.
 - Live metrics (balance, round stake, last win) should stay visually above the round status; the status block stays visible but compact instead of becoming collapsible.
-- The `Schaf` and `Löwe` overlay buttons should each fire their own animal-flavored click cue before the later risk outcome sound resolves.
+- `Letzter Gewinn` keeps showing the most recent credited positive win through losses and unresolved or lost risk choices; it changes only when a new positive amount is credited.
+- The `Schaf` button plays its sheep cue immediately because that choice resolves safely. The `Löwe` button defers its animal cue until the risk result: lion win plays lion, while a sheep/loss result plays only sheep.
 - File-based audio URLs must respect Vite's configured base path so the Schaf and Löwe samples work under GitHub Pages at `/slotgame/`.
 - The visual atmosphere should use a subtle jackpot-character hero backdrop with gold spotlights and premium glow accents instead of a flat background, keeping the UI readable while making the birthday jackpot motif more present.
 - The jackpot-character backdrop should stay visible in the initial above-the-fold hero area on load rather than sitting lower in the scrollable payout section.

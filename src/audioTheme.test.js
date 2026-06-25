@@ -67,9 +67,9 @@ test("audio cue planner escalates feature and jackpot outcomes correctly", () =>
 
 test("risk result cue planner keeps lion and sheep outcomes cleanly separated", () => {
   assert.equal(getCueNameForRiskDecision(true), "sheepSelect");
-  assert.equal(getCueNameForRiskDecision(false), "lionSelect");
+  assert.equal(getCueNameForRiskDecision(false), null);
   assert.deepEqual(getCueNamesForRiskResult("safe"), ["sheepSelect"]);
-  assert.deepEqual(getCueNamesForRiskResult("lion-win"), ["riskWin"]);
+  assert.deepEqual(getCueNamesForRiskResult("lion-win"), ["lionSelect", "riskWin"]);
   assert.deepEqual(getCueNamesForRiskResult("lion-loss"), ["sheepSelect"]);
   assert.deepEqual(getCueNamesForRiskResult("unknown"), []);
 });

@@ -126,13 +126,13 @@ export function getCueNamesForOutcome(eventName) {
 }
 
 export function getCueNameForRiskDecision(takeSafe) {
-  return takeSafe ? "sheepSelect" : "lionSelect";
+  return takeSafe ? "sheepSelect" : null;
 }
 
 export function getCueNamesForRiskResult(resultOutcome) {
   const cueMap = {
     safe: ["sheepSelect"],
-    "lion-win": ["riskWin"],
+    "lion-win": ["lionSelect", "riskWin"],
     "lion-loss": ["sheepSelect"],
   };
 

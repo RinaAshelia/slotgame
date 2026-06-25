@@ -23,6 +23,8 @@ import {
   resolveRiskChoice,
 } from "./gameMath.js";
 import { createRiskDecisionOverlay, createRiskResultOverlay } from "./riskOverlay.js";
+import { createResolvedReels, getRandomRows } from "./slotReels.js";
+import { getNextLastWin, getSlotNavigationItems } from "./slotUiModel.js";
 import { useSlotAudio } from "./useSlotAudio.js";
 import { WheelGame } from "./WheelGame.jsx";
 import slotMachineImage from "./assets/slot-machine-transparent.png";
@@ -144,73 +146,6 @@ const payoutBoardSections = [
   symbols: section.symbolIds.map((symbolId) => symbolMap[symbolId]),
 }));
 const premiumPayoutIds = new Set(["jackpot", "lion", "white-wolf", "dark-wolf"]);
-
-const normalSymbols = symbols.filter((symbol) => symbol.id !== "jackpot");
-const spinningSymbols = symbols;
-const featuredSymbols = symbols.filter(
-  (symbol) => symbol.id !== "sheep" && symbol.id !== "jackpot",
-);
-const normalSymbolIds = normalSymbols.map((symbol) => symbol.id);
-const spinningSymbolIds = spinningSymbols.map((symbol) => symbol.id);
-
-function getRowsForSymbol(symbolId, pool = normalSymbolIds) {
-  const centerIndex = pool.indexOf(symbolId);
-  const safeCenter = centerIndex === -1 ? 0 : centerIndex;
-  const previousIndex = (safeCenter + pool.length - 1) % pool.length;
-  const nextIndex = (safeCenter + 1) % pool.length;
-
-  return [pool[previousIndex], pool[safeCenter], pool[nextIndex]];
-}
-
-function getRandomRows(includeJackpot = false) {
-  const pool = includeJackpot ? spinningSymbolIds : normalSymbolIds;
-  const center = pool[Math.floor(Math.random() * pool.length)];
-  return getRowsForSymbol(center, pool);
-}
-
-function getRandomSymbolId(pool = normalSymbolIds) {
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-
-function buildNonWinningRow(pool = normalSymbolIds) {
-  const row = [getRandomSymbolId(pool), getRandomSymbolId(pool), getRandomSymbolId(pool)];
-
-  if (row[0] === row[1] && row[1] === row[2]) {
-    const alternatives = pool.filter((symbolId) => symbolId !== row[0]);
-    row[2] = alternatives[Math.floor(Math.random() * alternatives.length)];
-  }
-
-  return row;
-}
-
-function rowsToReels(rows) {
-  return [0, 1, 2].map((reelIndex) => rows.map((row) => row[reelIndex]));
-}
-
-function createResolvedReels(outcomeKind) {
-  const rows = [buildNonWinningRow(), buildNonWinningRow(), buildNonWinningRow()];
-
-  if (outcomeKind === "mixed") {
-    return rowsToReels(rows);
-  }
-
-  const targetLine =
-    outcomeKind === "jackpot"
-      ? FIXED_PAYLINES.find((line) => line.id === JACKPOT_PAYLINE_ID)
-      : FIXED_PAYLINES[Math.floor(Math.random() * FIXED_PAYLINES.length)];
-
-  if (outcomeKind === "near-miss") {
-    const primary = getRandomSymbolId(featuredSymbols.map((symbol) => symbol.id));
-    const alternatives = normalSymbolIds.filter((symbolId) => symbolId !== primary);
-    const secondary = alternatives[Math.floor(Math.random() * alternatives.length)];
-    rows[targetLine.rowIndex] = [primary, primary, secondary].sort(() => Math.random() - 0.5);
-
-    return rowsToReels(rows);
-  }
-
-  rows[targetLine.rowIndex] = [outcomeKind, outcomeKind, outcomeKind];
-  return rowsToReels(rows);
-}
 
 function getPayoutDescription(symbolId, bet) {
   if (symbolId === "jackpot") {
@@ -354,6 +289,19 @@ function AudioToggleButton({ isMuted, onClick }) {
   );
 }
 
+function SlotHeaderActions({ isMuted, onAudioToggle }) {
+  return (
+    <div className="slot-header-actions">
+      {getSlotNavigationItems(APP_BASE).map((item) => (
+        <a className="audio-toggle wheel-nav-link" href={item.href} key={item.label}>
+          {item.label}
+        </a>
+      ))}
+      <AudioToggleButton isMuted={isMuted} onClick={onAudioToggle} />
+    </div>
+  );
+}
+
 function SpinButton({ className, disabled, isSpinning, onClick, stake }) {
   return (
     <button aria-label="Spielen" className={className} disabled={disabled} onClick={onClick} type="button">
@@ -477,7 +425,6 @@ export function SlotGame() {
     const wins = evaluatePaylineWins(outcome, stake, getSymbolPayout);
 
     if (wins.length === 0) {
-      setLastWin(0);
       setPendingRiskChoice(null);
       setRiskResultOverlay(null);
       setIsResolvingRiskChoice(false);
@@ -499,7 +446,6 @@ export function SlotGame() {
 
     if (wins.length === 1 && canOfferRiskChoice(winningSymbol.id, payout, stake)) {
       void playCue(winningSymbol.id === "jackpot" ? "jackpot" : "featureTrigger");
-      setLastWin(0);
       setIsResolvingRiskChoice(false);
       riskResolutionGuardRef.current = false;
       setRiskResultOverlay(null);
@@ -555,7 +501,11 @@ export function SlotGame() {
       return;
     }
 
-    void playCue(getCueNameForRiskDecision(takeSafe));
+    const decisionCue = getCueNameForRiskDecision(takeSafe);
+
+    if (decisionCue) {
+      void playCue(decisionCue);
+    }
 
     riskResolutionGuardRef.current = true;
     setIsResolvingRiskChoice(true);
@@ -564,7 +514,7 @@ export function SlotGame() {
     riskDecisionTimerRef.current = window.setTimeout(() => {
       const result = resolveRiskChoice(choice.openWin, { takeSafe });
       setBalance((current) => current + result.creditedWin);
-      setLastWin(result.creditedWin);
+      setLastWin((current) => getNextLastWin(current, result.creditedWin));
       setPendingRiskChoice(null);
       setRiskResultOverlay(createRiskResultOverlay(choice, result));
       setIsResolvingRiskChoice(false);
@@ -701,7 +651,7 @@ export function SlotGame() {
           <div className="desktop-title-block">
             <div className="title-utility-row">
               <p className="desktop-kicker">Loewe Slots</p>
-              <AudioToggleButton isMuted={isMuted} onClick={() => handleAudioToggle()} />
+              <SlotHeaderActions isMuted={isMuted} onAudioToggle={() => handleAudioToggle()} />
             </div>
             <h1>
               Lieber einmal <span>Löwe</span> als immer Schaf
@@ -768,7 +718,7 @@ export function SlotGame() {
         <header className="mobile-hero">
           <div className="title-utility-row is-mobile">
             <p className="eyebrow">Bold. Legendär. Unvergesslich.</p>
-            <AudioToggleButton isMuted={isMuted} onClick={() => handleAudioToggle()} />
+            <SlotHeaderActions isMuted={isMuted} onAudioToggle={() => handleAudioToggle()} />
           </div>
           <h1>
             Lieber einmal <span>Löwe</span> als immer Schaf

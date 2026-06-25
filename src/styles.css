@@ -31,6 +31,13 @@
   gap: 12px;
 }
 
+.slot-header-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .wheel-app-shell .wheel-lobby-header h1 {
   margin: 0;
   color: #f7e6bd;
@@ -2425,6 +2432,15 @@ img {
 
   .audio-toggle {
     align-self: flex-end;
+  }
+
+  .slot-header-actions {
+    align-self: stretch;
+    flex-wrap: wrap;
+  }
+
+  .slot-header-actions .audio-toggle {
+    align-self: auto;
   }
 
   .desktop-controls,
