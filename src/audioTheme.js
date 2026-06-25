@@ -1,5 +1,12 @@
 export const AUDIO_STORAGE_KEY = "loewe-slots-audio";
 
+export function buildAudioAssetUrl(pathname, baseUrl = import.meta.env?.BASE_URL ?? "/") {
+  const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+  const normalizedPath = pathname.startsWith("/") ? pathname.slice(1) : pathname;
+
+  return `${normalizedBase}${normalizedPath}`;
+}
+
 export const AUDIO_CUES = {
   uiClick: {
     kind: "one-shot",
@@ -55,14 +62,14 @@ export const AUDIO_CUES = {
   },
   sheepSelect: {
     kind: "sample",
-    src: "/audio/sheep-feature.mp3",
+    src: buildAudioAssetUrl("audio/sheep-feature.mp3"),
     offset: 0,
     playDuration: 0.72,
     volume: 0.28,
   },
   lionSelect: {
     kind: "sample",
-    src: "/audio/lion-feature.mp3",
+    src: buildAudioAssetUrl("audio/lion-feature.mp3"),
     offset: 0.62,
     playDuration: 1.55,
     volume: 0.52,

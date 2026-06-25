@@ -35,6 +35,7 @@ When implementing from a selected generated mock, treat that image as the source
 - The sound toggle should live as a right-aligned utility control in the hero/header rather than centered in the title stack.
 - Live metrics (balance, round stake, last win) should stay visually above the round status; the status block stays visible but compact instead of becoming collapsible.
 - The `Schaf` and `Löwe` overlay buttons should each fire their own animal-flavored click cue before the later risk outcome sound resolves.
+- File-based audio URLs must respect Vite's configured base path so the Schaf and Löwe samples work under GitHub Pages at `/slotgame/`.
 - The visual atmosphere should use a subtle jackpot-character hero backdrop with gold spotlights and premium glow accents instead of a flat background, keeping the UI readable while making the birthday jackpot motif more present.
 - The jackpot-character backdrop should stay visible in the initial above-the-fold hero area on load rather than sitting lower in the scrollable payout section.
 - The desktop jackpot motif should live beside the reels as a dedicated full-body character stage rather than as a floating background figure, so the birthday jackpot motif feels anchored and intentional.

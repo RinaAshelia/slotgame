@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   AUDIO_CUES,
+  buildAudioAssetUrl,
   getCueNamesForOutcome,
   getCueNamesForRiskResult,
   getDefaultAudioPreferences,
@@ -33,6 +34,17 @@ test("feature decision buttons use dedicated sample-based animal sounds", () => 
   assert.match(AUDIO_CUES.lionSelect.src, /lion-feature\.mp3$/);
   assert.equal(AUDIO_CUES.lionSelect.offset, 0.62);
   assert.equal(AUDIO_CUES.lionSelect.playDuration, 1.55);
+});
+
+test("sample audio URLs respect the GitHub Pages base path", () => {
+  assert.equal(
+    buildAudioAssetUrl("audio/sheep-feature.mp3", "/slotgame/"),
+    "/slotgame/audio/sheep-feature.mp3",
+  );
+  assert.equal(
+    buildAudioAssetUrl("/audio/lion-feature.mp3", "/slotgame"),
+    "/slotgame/audio/lion-feature.mp3",
+  );
 });
 
 test("default audio preferences start enabled at the intended master level", () => {
