@@ -10,6 +10,7 @@
   z-index: 2;
   display: grid;
   gap: 18px;
+  min-width: 0;
 }
 
 .wheel-app-shell .wheel-lobby-header {
@@ -17,6 +18,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+  min-width: 0;
+}
+
+.wheel-app-shell .wheel-lobby-header > * {
+  min-width: 0;
 }
 
 .wheel-header-actions {
@@ -284,12 +290,14 @@
 
 .wheel-app-shell .wheel-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 220px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
 
+.wheel-app-shell .wheel-layout,
 .wheel-app-shell .wheel-main-column {
+  min-width: 0;
   display: grid;
   gap: 18px;
 }
@@ -299,6 +307,7 @@
 }
 
 .wheel-app-shell .wheel-stage-shell {
+  min-width: 0;
   display: grid;
   gap: 10px;
   justify-items: center;
@@ -313,11 +322,21 @@
   gap: 22px;
   align-items: stretch;
   justify-content: center;
+  min-width: 0;
+}
+
+.wheel-play-column {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  justify-items: center;
+  align-content: start;
 }
 
 .wheel-stage {
   position: relative;
   width: min(100%, 720px);
+  min-width: 0;
   aspect-ratio: 1;
   display: grid;
   place-items: center;
@@ -397,13 +416,13 @@
 .wheel-label {
   fill: #fff3d0;
   font-family: "Avenir Next Condensed", "Trebuchet MS", sans-serif;
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   paint-order: stroke fill;
   stroke: rgba(33, 10, 6, 0.45);
-  stroke-width: 7px;
+  stroke-width: 6px;
   stroke-linejoin: round;
 }
 
@@ -465,14 +484,16 @@
 
 .wheel-jackpot-card {
   position: relative;
-  min-height: 100%;
-  padding: 20px 18px 16px;
+  min-width: 0;
+  min-height: 720px;
+  padding: 28px 18px 16px;
   border-radius: 32px;
   overflow: hidden;
   display: grid;
-  align-content: end;
+  grid-template-rows: auto 1fr auto;
+  align-content: stretch;
   justify-items: center;
-  gap: 12px;
+  gap: 18px;
   border: 1px solid rgba(255, 205, 118, 0.34);
   background:
     radial-gradient(circle at 50% 14%, rgba(255, 215, 120, 0.12), transparent 28%),
@@ -505,10 +526,11 @@
   position: relative;
   z-index: 2;
   display: grid;
-  gap: 6px;
+  gap: 8px;
   justify-items: center;
   text-align: center;
-  max-width: 210px;
+  max-width: 224px;
+  align-self: start;
 }
 
 .wheel-jackpot-copy span {
@@ -522,8 +544,8 @@
 .wheel-jackpot-copy strong {
   color: #fff2cf;
   font-family: "Iowan Old Style", "Palatino Linotype", serif;
-  font-size: 1.12rem;
-  line-height: 1.05;
+  font-size: 1.18rem;
+  line-height: 1.02;
 }
 
 .wheel-jackpot-copy p {
@@ -533,11 +555,29 @@
   line-height: 1.35;
 }
 
+.wheel-jackpot-quote {
+  max-width: 20ch;
+  padding: 10px 14px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 213, 126, 0.18);
+  background: linear-gradient(180deg, rgba(255, 227, 170, 0.08) 0%, rgba(255, 227, 170, 0.03) 100%);
+  color: #ffe7ad;
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 1.02rem;
+  line-height: 1.28;
+  text-wrap: balance;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 241, 210, 0.08),
+    0 10px 20px rgba(0, 0, 0, 0.12);
+}
+
 .wheel-jackpot-image {
   position: relative;
   z-index: 2;
   width: 216px;
-  margin-top: -2px;
+  margin-top: 0;
+  align-self: center;
   filter:
     drop-shadow(0 24px 30px rgba(0, 0, 0, 0.34))
     saturate(1.05)
@@ -548,6 +588,7 @@
   position: relative;
   z-index: 2;
   width: 100%;
+  align-self: end;
   padding: 10px 12px;
   border-radius: 999px;
   border: 1px solid rgba(255, 205, 118, 0.28);
@@ -567,6 +608,8 @@
 
 .wheel-brief-panel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
   gap: 12px;
   padding: 16px 18px;
   border-radius: 26px;
@@ -602,6 +645,7 @@
 .wheel-brief-rules {
   display: grid;
   gap: 8px;
+  justify-items: start;
 }
 
 .wheel-brief-chips {
@@ -611,6 +655,7 @@
 }
 
 .wheel-brief-chips span {
+  max-width: 100%;
   padding: 9px 13px;
   border-radius: 999px;
   border: 1px solid rgba(255, 204, 120, 0.16);
@@ -619,10 +664,11 @@
   font-size: 0.84rem;
   font-weight: 700;
   letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
 }
 
 .wheel-spin-button {
-  width: min(100%, 540px);
+  width: min(100%, 620px);
   min-height: 96px;
   padding: 16px 22px 18px;
   border-radius: 30px;
@@ -630,7 +676,7 @@
   justify-items: center;
   align-content: center;
   gap: 6px;
-  margin-top: 22px;
+  margin-top: 0;
   border: 1px solid rgba(255, 220, 135, 0.4);
   background:
     radial-gradient(circle at 50% 0%, rgba(255, 245, 210, 0.34), transparent 34%),
@@ -673,6 +719,83 @@
   filter: saturate(0.92) brightness(0.95);
 }
 
+.wheel-result-history {
+  width: min(100%, 620px);
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 204, 120, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 227, 170, 0.05);
+}
+
+.wheel-result-history-header {
+  display: grid;
+  gap: 4px;
+}
+
+.wheel-result-history-header h2 {
+  margin: 0;
+  color: #fff0c8;
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 1.15rem;
+}
+
+.wheel-result-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wheel-result-item {
+  display: grid;
+  grid-template-columns: 28px 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 204, 120, 0.12);
+  border-radius: 6px;
+  background: rgba(17, 7, 5, 0.44);
+}
+
+.wheel-result-number {
+  color: #d9ae63;
+  font-weight: 800;
+  text-align: center;
+}
+
+.wheel-result-item img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.wheel-result-item span:last-child {
+  min-width: 0;
+}
+
+.wheel-result-item strong,
+.wheel-result-item small {
+  display: block;
+}
+
+.wheel-result-item strong {
+  color: #fff0c8;
+}
+
+.wheel-result-item small,
+.wheel-result-empty {
+  color: rgba(247, 223, 170, 0.76);
+  overflow-wrap: anywhere;
+}
+
+.wheel-result-empty {
+  margin: 0;
+}
+
 .spin-overlay {
   position: fixed;
   inset: 0;
@@ -706,6 +829,14 @@
     inset 0 1px 0 rgba(255, 236, 196, 0.12);
 }
 
+.spin-overlay-symbol {
+  width: 132px;
+  height: 132px;
+  justify-self: center;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.34));
+}
+
 .spin-overlay-kicker {
   color: #d9ae63;
   font-size: 0.76rem;
@@ -728,9 +859,30 @@
   line-height: 1.5;
 }
 
+.spin-overlay-card > .primary-button {
+  min-height: 48px;
+  border: 1px solid rgba(255, 220, 135, 0.4);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f1bc4d 0%, #b86d17 100%);
+  color: #2e1308;
+  font-weight: 800;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 223, 0.52),
+    0 12px 24px rgba(0, 0, 0, 0.24);
+}
+
+.spin-overlay-card > .primary-button:hover,
+.spin-overlay-card > .primary-button:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 223, 0.58),
+    0 16px 28px rgba(0, 0, 0, 0.3),
+    0 0 0 3px rgba(255, 202, 110, 0.22);
+}
+
 .spin-overlay-result {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 14px 16px;
@@ -748,22 +900,33 @@
 }
 
 .spin-overlay-result strong {
+  max-width: 68%;
   color: #ffe8ad;
   font-family: "Iowan Old Style", "Palatino Linotype", serif;
   font-size: 1.4rem;
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 1060px) {
-  .wheel-app-shell .wheel-layout {
-    grid-template-columns: 1fr;
+  .wheel-brief-panel {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
   }
 
   .wheel-stage-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wheel-stage {
+    width: 100%;
+    max-width: calc(100vw - 32px);
+    justify-self: center;
   }
 
   .wheel-jackpot-card {
     min-height: 320px;
+    height: auto;
   }
 }
 
@@ -781,6 +944,12 @@
     align-items: flex-start;
   }
 
+  .wheel-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
   .wheel-app-shell .wheel-lobby-header p {
     max-width: none;
   }
@@ -790,9 +959,14 @@
   }
 
   .wheel-spin-button {
+    width: 100%;
     min-height: 78px;
     font-size: 1.22rem;
-    margin-top: 16px;
+    margin-top: 0;
+  }
+
+  .wheel-result-history {
+    width: 100%;
   }
 }
 

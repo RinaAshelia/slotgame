@@ -8,8 +8,15 @@ import lionEmblem from "./assets/lion-emblem-new.png";
 import pinkElfGirl from "./assets/pink-elf-girl-clean.png";
 import sheepSymbol from "./assets/sheep-symbol-new-cut.png";
 import whiteWolfBoy from "./assets/white-wolf-boy-cut.png";
-import { formatGil } from "./formatGil.js";
 import { useSlotAudio } from "./useSlotAudio.js";
+import {
+  TOTAL_WHEEL_SPINS,
+  WHEEL_PRIZES,
+  appendWheelResult,
+  createWheelResult,
+  getWheelAudioLabel,
+} from "./wheelGameModel.js";
+import { getWheelSpinAudioPlan } from "./wheelAudio.js";
 
 const APP_BASE = import.meta.env.BASE_URL || "/";
 
@@ -20,26 +27,25 @@ function buildAppPath(pathname = "") {
 }
 
 const SEGMENTS = [
-  { id: "jackpot", label: "Jackpot", payout: 1250000, src: jackpotGoldBoy, tone: "is-jackpot" },
-  { id: "lion", label: "Löwe", payout: 100, src: lionEmblem, tone: "is-lion" },
-  { id: "blonde-cat", label: "Turri", payout: 10, src: blondeCatGirl, tone: "is-gold" },
-  { id: "blonde-heart", label: "Ashelia", payout: 5, src: blondeHeartGirl, tone: "is-rose" },
-  { id: "pink-elf", label: "Eden", payout: 15, src: pinkElfGirl, tone: "is-rose" },
-  { id: "white-wolf", label: "Poly", payout: 50, src: whiteWolfBoy, tone: "is-ice" },
-  { id: "dark-wolf", label: "Alucard", payout: 25, src: darkWolfFullCut, tone: "is-ember" },
-  { id: "sheep", label: "Schaf", payout: 0, src: sheepSymbol, tone: "is-sheep" },
+  { id: "jackpot", label: "Jackpot", prize: WHEEL_PRIZES.jackpot, src: jackpotGoldBoy, tone: "is-jackpot" },
+  { id: "lion", label: "Löwe", prize: WHEEL_PRIZES.lion, src: lionEmblem, tone: "is-lion" },
+  { id: "blonde-cat", label: "Turri", prize: WHEEL_PRIZES["blonde-cat"], src: blondeCatGirl, tone: "is-gold" },
+  { id: "blonde-heart", label: "Ashelia", prize: WHEEL_PRIZES["blonde-heart"], src: blondeHeartGirl, tone: "is-rose" },
+  { id: "pink-elf", label: "Eden", prize: WHEEL_PRIZES["pink-elf"], src: pinkElfGirl, tone: "is-rose" },
+  { id: "white-wolf", label: "Poly", prize: WHEEL_PRIZES["white-wolf"], src: whiteWolfBoy, tone: "is-ice" },
+  { id: "dark-wolf", label: "Alucard", prize: WHEEL_PRIZES["dark-wolf"], src: darkWolfFullCut, tone: "is-ember" },
+  { id: "sheep", label: "Schaf", prize: WHEEL_PRIZES.sheep, src: sheepSymbol, tone: "is-sheep" },
 ];
 
-const TOTAL_SPINS = 3;
 const SPIN_DURATION_MS = 3800;
 const RESULT_DELAY_MS = 420;
 const POINTER_DEG = 90;
 const WHEEL_SIZE = 1000;
 const WHEEL_CENTER = WHEEL_SIZE / 2;
 const WHEEL_RADIUS = 434;
-const SEGMENT_IMAGE_RADIUS = 270;
+const SEGMENT_IMAGE_RADIUS = 258;
 const SEGMENT_IMAGE_SIZE = 150;
-const SEGMENT_LABEL_RADIUS = 346;
+const SEGMENT_LABEL_RADIUS = 358;
 
 function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
@@ -65,11 +71,11 @@ function describeSectorPath(centerX, centerY, radius, startAngle, endAngle) {
 
 function getSegmentGradient(segment) {
   if (segment.id === "jackpot") {
-    return ["#7f1f0c", "#f4b24b"];
+    return ["#8a5a09", "#ffd76a"];
   }
 
   if (segment.id === "lion") {
-    return ["#5f3514", "#f1c058"];
+    return ["#6f0909", "#d9362b"];
   }
 
   if (segment.id === "blonde-cat") {
@@ -202,39 +208,51 @@ function Wheel({ rotation, activeSegment, isSpinning }) {
 
 function AudioButton({ muted, onClick }) {
   return (
-    <button className={`audio-toggle ${muted ? "is-muted" : ""}`} onClick={onClick} type="button">
+    <button
+      aria-pressed={!muted}
+      className={`audio-toggle ${muted ? "is-muted" : ""}`}
+      onClick={onClick}
+      type="button"
+    >
       <span className="audio-toggle-dot" aria-hidden="true" />
-      <span>{muted ? "Sound aus" : "Sound an"}</span>
+      <span>{getWheelAudioLabel(muted)}</span>
     </button>
   );
 }
 
 export function WheelGame() {
-  const [balance, setBalance] = useState(35);
-  const [bet, setBet] = useState(2.5);
-  const [spinsLeft, setSpinsLeft] = useState(TOTAL_SPINS);
+  const [spinsLeft, setSpinsLeft] = useState(TOTAL_WHEEL_SPINS);
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [activeSegment, setActiveSegment] = useState(null);
   const [pendingResult, setPendingResult] = useState(null);
   const [overlayResult, setOverlayResult] = useState(null);
-  const [lastWin, setLastWin] = useState(0);
+  const [results, setResults] = useState([]);
   const [status, setStatus] = useState("Du hast drei Chancen, den Gilbaron zu beeindrucken.");
   const timersRef = useRef([]);
-  const { isMuted, playCue, toggleMute } = useSlotAudio();
+  const confirmButtonRef = useRef(null);
+  const { isMuted, playCue, startLoop, stopLoop, stopAllLoops, toggleMute } = useSlotAudio();
 
-  const canSpin = !isSpinning && !overlayResult && spinsLeft > 0 && balance >= bet;
+  const canSpin = !isSpinning && !overlayResult && spinsLeft > 0;
 
   useEffect(() => {
     return () => {
       timersRef.current.forEach((timer) => window.clearTimeout(timer));
       timersRef.current = [];
+      stopAllLoops();
     };
   }, []);
+
+  useEffect(() => {
+    if (overlayResult) {
+      confirmButtonRef.current?.focus();
+    }
+  }, [overlayResult]);
 
   function clearTimers() {
     timersRef.current.forEach((timer) => window.clearTimeout(timer));
     timersRef.current = [];
+    stopAllLoops();
   }
 
   function doSpin() {
@@ -244,22 +262,23 @@ export function WheelGame() {
 
     clearTimers();
     const segment = pickSegment();
-    const nextRotation = getRotation(TOTAL_SPINS - spinsLeft + 4, SEGMENTS.indexOf(segment));
-    const win = segment.payout > 0 && Math.random() > 0.16;
-    const payout = win ? (segment.id === "jackpot" ? 1250000 : segment.payout * (bet / 2.5)) : 0;
+    const result = createWheelResult(segment);
+    const nextRotation = getRotation(TOTAL_WHEEL_SPINS - spinsLeft + 4, SEGMENTS.indexOf(segment));
+    const audioPlan = getWheelSpinAudioPlan(result);
 
-    setBalance((current) => current - bet);
     setSpinsLeft((current) => current - 1);
     setIsSpinning(true);
     setActiveSegment(segment);
     setRotation(nextRotation);
-    setPendingResult({ win, payout, segment });
+    setPendingResult(result);
     setOverlayResult(null);
     setStatus("Das Rad läuft. Bitte warten, bis es steht.");
-    void playCue("spinStart");
+    void playCue(audioPlan.start[0]);
+    void startLoop(audioPlan.start[1]);
 
     timersRef.current.push(
       window.setTimeout(() => {
+        stopLoop("spinLoop");
         void playCue("reelStop");
       }, SPIN_DURATION_MS - 700),
     );
@@ -267,29 +286,18 @@ export function WheelGame() {
     timersRef.current.push(
       window.setTimeout(() => {
         setIsSpinning(false);
-        setLastWin(payout);
-        setStatus(win ? `${segment.label} wurde getroffen.` : "Leider nichts getroffen.");
-        void playCue(win ? (segment.id === "jackpot" ? "jackpot" : "win") : "featureTrigger");
+        setStatus(
+          result.isBlank
+            ? "Schaf getroffen. Diesmal ist es eine Niete."
+            : `${result.label} getroffen: ${result.prize}.`,
+        );
+        void playCue(audioPlan.stop[1]);
       }, SPIN_DURATION_MS),
     );
 
     timersRef.current.push(
       window.setTimeout(() => {
-        setOverlayResult(
-          win
-            ? {
-                title: `${segment.label} gewonnen`,
-                detail: "Bestätigen schreibt den Gewinn gut.",
-                payout,
-                win: true,
-              }
-            : {
-                title: "Leider nichts",
-                detail: "Diesmal gibt es keinen Gewinn. Bestätigen für den nächsten Versuch.",
-                payout: 0,
-                win: false,
-              },
-        );
+        setOverlayResult(result);
       }, SPIN_DURATION_MS + RESULT_DELAY_MS),
     );
   }
@@ -299,16 +307,14 @@ export function WheelGame() {
       return;
     }
 
-    if (pendingResult.win) {
-      setBalance((current) => current + pendingResult.payout);
-      setLastWin(pendingResult.payout);
-    } else {
-      setLastWin(0);
-    }
-
+    setResults((current) => appendWheelResult(current, pendingResult));
     setOverlayResult(null);
     setPendingResult(null);
-    setStatus(spinsLeft > 0 ? "Nächster Versuch ist frei." : "Alle drei Versuche sind verbraucht.");
+    setStatus(
+      spinsLeft > 0
+        ? "Nächster Versuch ist bereit."
+        : "Alle drei Drehungen für heute sind verbraucht.",
+    );
   }
 
   return (
@@ -342,46 +348,86 @@ export function WheelGame() {
                 <span className="wheel-brief-eyebrow">Kurzregeln</span>
                 <div className="wheel-brief-chips">
                   <span>3 Drehungen</span>
-                  <span>8 Felder</span>
-                  <span>Jackpot: {formatGil(1250000)}</span>
-                  <span>Schaf: leer</span>
+                  <span>8 feste Preise</span>
+                  <span>Jackpot: {WHEEL_PRIZES.jackpot}</span>
+                  <span>Schaf: Niete</span>
                 </div>
               </div>
             </div>
 
             <div className="wheel-stage-shell">
               <div className="wheel-stage-row">
-                <Wheel activeSegment={activeSegment} isSpinning={isSpinning} rotation={rotation} />
+                <div className="wheel-play-column">
+                  <Wheel activeSegment={activeSegment} isSpinning={isSpinning} rotation={rotation} />
+                  <button
+                    className="primary-button is-spin wheel-spin-button"
+                    disabled={!canSpin}
+                    onClick={doSpin}
+                    type="button"
+                  >
+                    <span>{isSpinning ? "Dreht..." : spinsLeft > 0 ? "Jetzt drehen" : "Keine Drehungen mehr"}</span>
+                    <small>{spinsLeft} Drehungen übrig</small>
+                  </button>
+                  <section className="wheel-result-history" aria-labelledby="wheel-history-title">
+                    <div className="wheel-result-history-header">
+                      <span className="wheel-brief-eyebrow">Ergebnisse</span>
+                      <h2 id="wheel-history-title">Deine Drehungen heute</h2>
+                    </div>
+                    {results.length > 0 ? (
+                      <ol className="wheel-result-list">
+                        {results.map((result, index) => (
+                          <li className="wheel-result-item" key={`${result.id}-${index}`}>
+                            <span className="wheel-result-number">{index + 1}</span>
+                            <img alt="" src={result.src} />
+                            <span>
+                              <strong>{result.label}</strong>
+                              <small>{result.prize}</small>
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <p className="wheel-result-empty">Noch kein Ergebnis bestätigt.</p>
+                    )}
+                  </section>
+                </div>
                 <aside className="wheel-jackpot-card">
                   <div className="wheel-jackpot-copy">
                     <span>JACKPOT-BÜHNE</span>
                     <strong>Gil-Baron</strong>
-                    <p>Der Sondergewinn bleibt immer sichtbar inszeniert.</p>
+                    <p className="wheel-jackpot-quote">"1.250.000 GIL warten auf dich!"</p>
                   </div>
                   <img alt="Jackpot Gold Boy" className="wheel-jackpot-image" src={jackpotGoldBoy} />
-                  <div className="wheel-jackpot-amount">{formatGil(1250000)}</div>
+                  <div className="wheel-jackpot-amount">{WHEEL_PRIZES.jackpot}</div>
                 </aside>
               </div>
-              <button className="primary-button is-spin wheel-spin-button" disabled={!canSpin} onClick={doSpin} type="button">
-                <span>{isSpinning ? "Dreht..." : spinsLeft > 0 ? "Jetzt drehen" : "Keine Spins mehr"}</span>
-                <small>{spinsLeft} Versuche übrig</small>
-              </button>
             </div>
           </div>
         </div>
       </section>
 
       {overlayResult ? (
-        <div className="spin-overlay" role="dialog" aria-modal="true">
-          <div className={`spin-overlay-card ${overlayResult.win ? "is-win" : "is-empty"}`}>
-            <div className="spin-overlay-kicker">{overlayResult.win ? "Gewonnen" : "Kein Treffer"}</div>
-            <h2>{overlayResult.title}</h2>
-            <p>{overlayResult.detail}</p>
+        <div className="spin-overlay">
+          <div
+            aria-labelledby="wheel-result-title"
+            aria-modal="true"
+            className={`spin-overlay-card ${overlayResult.isBlank ? "is-empty" : "is-win"}`}
+            role="dialog"
+          >
+            <div className="spin-overlay-kicker">{overlayResult.isBlank ? "Kein Gewinn" : "Dein Preis"}</div>
+            <img alt="" className="spin-overlay-symbol" src={overlayResult.src} />
+            <h2 id="wheel-result-title">{overlayResult.label}</h2>
+            <p>Dieses Ergebnis wird für deine heutige Runde festgehalten.</p>
             <div className="spin-overlay-result">
-              <span>{overlayResult.win ? "Auszahlung" : "Ergebnis"}</span>
-              <strong>{overlayResult.win ? formatGil(overlayResult.payout) : "0 GIL"}</strong>
+              <span>Preis</span>
+              <strong>{overlayResult.prize}</strong>
             </div>
-            <button className="primary-button" onClick={confirmResult} type="button">
+            <button
+              className="primary-button"
+              onClick={confirmResult}
+              ref={confirmButtonRef}
+              type="button"
+            >
               Bestätigen
             </button>
           </div>

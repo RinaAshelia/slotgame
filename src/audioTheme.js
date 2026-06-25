@@ -19,11 +19,12 @@ export const AUDIO_CUES = {
   },
   spinLoop: {
     kind: "loop",
-    volume: 0.11,
-    intervalMs: 180,
+    volume: 0.12,
+    intervalMs: 140,
     steps: [
-      { wave: "triangle", frequency: 160, duration: 0.08, gain: 0.7 },
-      { wave: "sine", frequency: 320, duration: 0.05, gain: 0.18, delay: 0.025 },
+      { wave: "triangle", frequency: 176, duration: 0.09, gain: 0.82 },
+      { wave: "sine", frequency: 352, duration: 0.07, gain: 0.24, delay: 0.018 },
+      { wave: "square", frequency: 704, duration: 0.032, gain: 0.08, delay: 0.052 },
     ],
   },
   reelStop: {
