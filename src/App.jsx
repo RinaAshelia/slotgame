@@ -41,6 +41,14 @@ function getAppRoute() {
   }
 
   const base = APP_BASE.endsWith("/") ? APP_BASE : `${APP_BASE}/`;
+  const hashPath = window.location.hash.startsWith("#/")
+    ? window.location.hash.slice(1)
+    : "";
+
+  if (hashPath) {
+    return hashPath;
+  }
+
   const pathname = window.location.pathname;
 
   if (!pathname.startsWith(base)) {
