@@ -10,6 +10,21 @@ export function resolveAudioContextClass(targetWindow) {
   return targetWindow.AudioContext ?? targetWindow.webkitAudioContext ?? null;
 }
 
+export function startSamplePlayback(audio, cue, preferences) {
+  if (!audio || !cue) {
+    return null;
+  }
+
+  audio.volume = preferences.isMuted ? 0 : preferences.masterVolume * cue.volume;
+
+  if (typeof cue.offset === "number") {
+    const maxStart = Number.isFinite(audio.duration) ? Math.max(audio.duration - 0.01, 0) : cue.offset;
+    audio.currentTime = Math.min(cue.offset, maxStart);
+  }
+
+  return audio.play();
+}
+
 function readStoredPreferences() {
   if (typeof window === "undefined") {
     return getDefaultAudioPreferences();
@@ -81,6 +96,7 @@ export function useSlotAudio() {
 
     const primeAudio = () => {
       void ensureAudioReady();
+      primeSampleElements();
     };
 
     window.addEventListener("pointerdown", primeAudio, { once: true });
@@ -153,56 +169,26 @@ export function useSlotAudio() {
     return audio;
   }
 
-  async function waitForAudioElement(audio) {
-    if (!audio) {
-      return null;
-    }
-
-    if (audio.readyState >= 1) {
-      return audio;
-    }
-
-    await new Promise((resolve) => {
-      const handleReady = () => {
-        audio.removeEventListener("loadedmetadata", handleReady);
-        audio.removeEventListener("canplaythrough", handleReady);
-        audio.removeEventListener("error", handleReady);
-        resolve();
-      };
-
-      audio.addEventListener("loadedmetadata", handleReady);
-      audio.addEventListener("canplaythrough", handleReady);
-      audio.addEventListener("error", handleReady);
-      audio.load();
-    });
-
-    return audio;
+  function primeSampleElements() {
+    Object.values(AUDIO_CUES)
+      .filter((cue) => cue.kind === "sample")
+      .forEach((cue) => {
+        void getSampleElement(cue);
+      });
   }
 
-  async function playSampleCue(cueName) {
+  function playSampleCue(cueName) {
     const cue = AUDIO_CUES[cueName];
 
-    if (!cue || cue.kind !== "sample") {
+    if (!cue || cue.kind !== "sample" || typeof window === "undefined") {
       return;
     }
 
-    await getSampleElement(cue);
-
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const audio = new window.Audio(cue.src);
+    const cachedAudio = sampleElementCacheRef.current.get(cue.src);
+    const audio = cachedAudio?.cloneNode ? cachedAudio.cloneNode(true) : new window.Audio(cue.src);
     audio.preload = "auto";
-    await waitForAudioElement(audio);
-    audio.volume = preferences.isMuted ? 0 : preferences.masterVolume * cue.volume;
-
-    if (typeof cue.offset === "number") {
-      const maxStart = Number.isFinite(audio.duration) ? Math.max(audio.duration - 0.01, 0) : cue.offset;
-      audio.currentTime = Math.min(cue.offset, maxStart);
-    }
-
-    void audio.play().catch(() => null);
+    const playResult = startSamplePlayback(audio, cue, preferences);
+    void playResult?.catch(() => null);
 
     if (typeof cue.playDuration === "number") {
       window.setTimeout(() => {
@@ -249,7 +235,7 @@ export function useSlotAudio() {
     }
 
     if (cue.kind === "sample") {
-      await playSampleCue(cueName);
+      playSampleCue(cueName);
       return;
     }
 

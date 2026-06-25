@@ -8,7 +8,7 @@ import pinkElfGirl from "./assets/pink-elf-girl-clean.png";
 import sheepSymbol from "./assets/sheep-symbol-new-cut.png";
 import whiteWolfBoy from "./assets/white-wolf-boy-cut.png";
 import darkWolfFullCut from "./assets/dark-wolf-full-cut.png";
-import { getCueNamesForRiskResult } from "./audioTheme.js";
+import { getCueNameForRiskDecision, getCueNamesForRiskResult } from "./audioTheme.js";
 import { formatGil } from "./formatGil.js";
 import { FIXED_PAYLINES, JACKPOT_PAYLINE_ID, evaluatePaylineWins } from "./paylines.js";
 import {
@@ -555,9 +555,7 @@ export function SlotGame() {
       return;
     }
 
-    if (takeSafe) {
-      void playCue("sheepSelect");
-    }
+    void playCue(getCueNameForRiskDecision(takeSafe));
 
     riskResolutionGuardRef.current = true;
     setIsResolvingRiskChoice(true);
