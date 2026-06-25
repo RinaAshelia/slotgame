@@ -5,7 +5,9 @@ import {
   appendWheelResult,
   createWheelResult,
   getWheelAudioLabel,
+  getRemainingSpinsLabel,
   TOTAL_WHEEL_SPINS,
+  WHEEL_PRIZE_BOARD,
   WHEEL_PRIZES,
 } from "./wheelGameModel.js";
 
@@ -24,6 +26,25 @@ test("wheel prizes use the fixed Final Fantasy XIV fulfillment labels", () => {
 
 test("wheel prizes are frozen", () => {
   assert.equal(Object.isFrozen(WHEEL_PRIZES), true);
+});
+
+test("prize board exposes every fixed prize in display order", () => {
+  assert.deepEqual(WHEEL_PRIZE_BOARD, [
+    { id: "jackpot", label: "Jackpot", prize: "1.250.000 GIL" },
+    { id: "lion", label: "Löwe", prize: "333.000 GIL" },
+    { id: "white-wolf", label: "Poly", prize: "100.000 GIL" },
+    { id: "blonde-cat", label: "Turri", prize: "Glam-Item" },
+    {
+      id: "dark-wolf",
+      label: "Alucard",
+      prize: "Chocobo-Sattel (Auswahl 100er Trials)",
+    },
+    { id: "pink-elf", label: "Eden", prize: "33 Flasks nach Wahl" },
+    { id: "blonde-heart", label: "Ashelia", prize: "50 Bufffood" },
+    { id: "sheep", label: "Schaf", prize: "Niete" },
+  ]);
+  assert.equal(Object.isFrozen(WHEEL_PRIZE_BOARD), true);
+  assert.equal(WHEEL_PRIZE_BOARD.every(Object.isFrozen), true);
 });
 
 test("createWheelResult returns display data and the matching prize", () => {
@@ -128,4 +149,10 @@ test("wheel sessions allow exactly three spins", () => {
 test("audio label describes the action the button performs", () => {
   assert.equal(getWheelAudioLabel(true), "Ton einschalten");
   assert.equal(getWheelAudioLabel(false), "Ton ausschalten");
+});
+
+test("remaining spin label uses correct German singular and plural", () => {
+  assert.equal(getRemainingSpinsLabel(0), "0 Drehungen übrig");
+  assert.equal(getRemainingSpinsLabel(1), "1 Drehung übrig");
+  assert.equal(getRemainingSpinsLabel(2), "2 Drehungen übrig");
 });

@@ -9,10 +9,33 @@ export const WHEEL_PRIZES = Object.freeze({
   jackpot: "1.250.000 GIL",
 });
 
+export const WHEEL_PRIZE_BOARD = Object.freeze(
+  [
+    ["jackpot", "Jackpot"],
+    ["lion", "Löwe"],
+    ["white-wolf", "Poly"],
+    ["blonde-cat", "Turri"],
+    ["dark-wolf", "Alucard"],
+    ["pink-elf", "Eden"],
+    ["blonde-heart", "Ashelia"],
+    ["sheep", "Schaf"],
+  ].map(([id, label]) =>
+    Object.freeze({
+      id,
+      label,
+      prize: WHEEL_PRIZES[id],
+    }),
+  ),
+);
+
 export const TOTAL_WHEEL_SPINS = 3;
 
 export function getWheelAudioLabel(isMuted) {
   return isMuted ? "Ton einschalten" : "Ton ausschalten";
+}
+
+export function getRemainingSpinsLabel(spinsLeft) {
+  return `${spinsLeft} ${spinsLeft === 1 ? "Drehung" : "Drehungen"} übrig`;
 }
 
 export function createWheelResult(segment) {

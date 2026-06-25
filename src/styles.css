@@ -674,6 +674,141 @@
   overflow-wrap: anywhere;
 }
 
+.wheel-prize-board {
+  min-width: 0;
+  border: 1px solid rgba(255, 204, 120, 0.16);
+  background:
+    radial-gradient(circle at 14% 0%, rgba(255, 211, 123, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(34, 13, 9, 0.96) 0%, rgba(16, 7, 5, 0.98) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 196, 0.08),
+    0 16px 38px rgba(0, 0, 0, 0.16);
+}
+
+.wheel-prize-board-desktop {
+  display: grid;
+  gap: 14px;
+  padding: 16px 18px 18px;
+  border-radius: 24px;
+}
+
+.wheel-prize-board-mobile {
+  display: none;
+}
+
+.wheel-prize-board-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.wheel-prize-board-heading h2 {
+  margin: 3px 0 0;
+  color: #fff0c8;
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 1.28rem;
+  line-height: 1.05;
+}
+
+.wheel-prize-board-heading p {
+  margin: 0;
+  color: rgba(247, 223, 170, 0.72);
+  font-size: 0.88rem;
+}
+
+.wheel-prize-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wheel-prize-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 62px;
+  padding: 8px 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 204, 120, 0.12);
+  border-radius: 14px;
+  background: rgba(17, 7, 5, 0.46);
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.wheel-prize-item::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 224, 151, 0.08) 50%, transparent 70%);
+  opacity: 0;
+}
+
+.wheel-prize-item.is-active {
+  border-color: rgba(255, 211, 116, 0.66);
+  background:
+    radial-gradient(circle at 16% 50%, rgba(255, 205, 94, 0.18), transparent 42%),
+    rgba(69, 31, 12, 0.72);
+  box-shadow:
+    0 0 0 1px rgba(255, 213, 126, 0.14),
+    0 0 26px rgba(255, 187, 62, 0.12);
+}
+
+.wheel-prize-item.is-active::after {
+  opacity: 1;
+}
+
+.wheel-prize-item img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.28));
+}
+
+.wheel-prize-copy {
+  min-width: 0;
+}
+
+.wheel-prize-copy strong,
+.wheel-prize-copy small {
+  display: block;
+}
+
+.wheel-prize-copy strong {
+  color: #fff0c8;
+  font-size: 0.92rem;
+  line-height: 1.1;
+}
+
+.wheel-prize-copy small {
+  margin-top: 3px;
+  color: rgba(247, 223, 170, 0.74);
+  font-size: 0.76rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.wheel-prize-hit {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  color: #ffd778;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .wheel-spin-button {
   width: min(100%, 620px);
   min-height: 96px;
@@ -959,6 +1094,82 @@
 
   .wheel-app-shell .wheel-lobby-header p {
     max-width: none;
+  }
+
+  .wheel-prize-board-desktop {
+    display: none;
+  }
+
+  .wheel-prize-board-mobile {
+    display: block;
+    border-radius: 22px;
+    overflow: hidden;
+  }
+
+  .wheel-prize-board-mobile summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 76px;
+    padding: 14px 16px;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .wheel-prize-board-mobile summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .wheel-prize-board-mobile summary > span {
+    display: grid;
+    gap: 4px;
+  }
+
+  .wheel-prize-board-mobile summary strong {
+    color: #fff0c8;
+    font-family: "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: 1.18rem;
+  }
+
+  .wheel-prize-board-mobile summary > small {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    color: #e9c477;
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .wheel-prize-board-mobile summary > small::after {
+    content: "+";
+    width: 24px;
+    height: 24px;
+    border: 1px solid rgba(255, 204, 120, 0.2);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: #ffd47a;
+    font-size: 1rem;
+  }
+
+  .wheel-prize-board-mobile[open] summary {
+    border-bottom: 1px solid rgba(255, 204, 120, 0.12);
+  }
+
+  .wheel-prize-board-mobile[open] summary > small::after {
+    content: "−";
+  }
+
+  .wheel-prize-board-mobile .wheel-prize-list {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 10px;
+  }
+
+  .wheel-prize-board-mobile .wheel-prize-item {
+    min-height: 58px;
+    border-radius: 12px;
   }
 
   .primary-button.is-spin {

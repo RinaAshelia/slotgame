@@ -11,9 +11,11 @@ import whiteWolfBoy from "./assets/white-wolf-boy-cut.png";
 import { useSlotAudio } from "./useSlotAudio.js";
 import {
   TOTAL_WHEEL_SPINS,
+  WHEEL_PRIZE_BOARD,
   WHEEL_PRIZES,
   appendWheelResult,
   createWheelResult,
+  getRemainingSpinsLabel,
   getWheelAudioLabel,
 } from "./wheelGameModel.js";
 import { getWheelSpinAudioPlan } from "./wheelAudio.js";
@@ -36,6 +38,22 @@ const SEGMENTS = [
   { id: "dark-wolf", label: "Alucard", prize: WHEEL_PRIZES["dark-wolf"], src: darkWolfFullCut, tone: "is-ember" },
   { id: "sheep", label: "Schaf", prize: WHEEL_PRIZES.sheep, src: sheepSymbol, tone: "is-sheep" },
 ];
+
+const WHEEL_ASSETS = Object.freeze({
+  jackpot: jackpotGoldBoy,
+  lion: lionEmblem,
+  "white-wolf": whiteWolfBoy,
+  "blonde-cat": blondeCatGirl,
+  "dark-wolf": darkWolfFullCut,
+  "pink-elf": pinkElfGirl,
+  "blonde-heart": blondeHeartGirl,
+  sheep: sheepSymbol,
+});
+
+const PRIZE_BOARD_ITEMS = WHEEL_PRIZE_BOARD.map((item) => ({
+  ...item,
+  src: WHEEL_ASSETS[item.id],
+}));
 
 const SPIN_DURATION_MS = 3800;
 const RESULT_DELAY_MS = 420;
@@ -220,6 +238,54 @@ function AudioButton({ muted, onClick }) {
   );
 }
 
+function PrizeList({ activePrizeId }) {
+  return (
+    <ol className="wheel-prize-list">
+      {PRIZE_BOARD_ITEMS.map((item) => (
+        <li
+          className={`wheel-prize-item ${activePrizeId === item.id ? "is-active" : ""}`}
+          key={item.id}
+        >
+          <img alt="" src={item.src} />
+          <span className="wheel-prize-copy">
+            <strong>{item.label}</strong>
+            <small>{item.prize}</small>
+          </span>
+          {activePrizeId === item.id ? <span className="wheel-prize-hit">Getroffen</span> : null}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function PrizeBoard({ activePrizeId }) {
+  return (
+    <>
+      <section className="wheel-prize-board wheel-prize-board-desktop" aria-labelledby="wheel-prizes-title">
+        <div className="wheel-prize-board-heading">
+          <div>
+            <span className="wheel-brief-eyebrow">Gewinnübersicht</span>
+            <h2 id="wheel-prizes-title">Alle acht festen Preise</h2>
+          </div>
+          <p>Das Symbol bestimmt den Preis.</p>
+        </div>
+        <PrizeList activePrizeId={activePrizeId} />
+      </section>
+
+      <details className="wheel-prize-board wheel-prize-board-mobile">
+        <summary>
+          <span>
+            <span className="wheel-brief-eyebrow">Gewinnübersicht</span>
+            <strong>Alle Preise ansehen</strong>
+          </span>
+          <small>8 feste Preise</small>
+        </summary>
+        <PrizeList activePrizeId={activePrizeId} />
+      </details>
+    </>
+  );
+}
+
 export function WheelGame() {
   const [spinsLeft, setSpinsLeft] = useState(TOTAL_WHEEL_SPINS);
   const [rotation, setRotation] = useState(0);
@@ -234,6 +300,7 @@ export function WheelGame() {
   const { isMuted, playCue, startLoop, stopLoop, stopAllLoops, toggleMute } = useSlotAudio();
 
   const canSpin = !isSpinning && !overlayResult && spinsLeft > 0;
+  const activePrizeId = isSpinning ? null : activeSegment?.id;
 
   useEffect(() => {
     return () => {
@@ -355,6 +422,8 @@ export function WheelGame() {
               </div>
             </div>
 
+            <PrizeBoard activePrizeId={activePrizeId} />
+
             <div className="wheel-stage-shell">
               <div className="wheel-stage-row">
                 <div className="wheel-play-column">
@@ -366,7 +435,7 @@ export function WheelGame() {
                     type="button"
                   >
                     <span>{isSpinning ? "Dreht..." : spinsLeft > 0 ? "Jetzt drehen" : "Keine Drehungen mehr"}</span>
-                    <small>{spinsLeft} Drehungen übrig</small>
+                    <small>{getRemainingSpinsLabel(spinsLeft)}</small>
                   </button>
                   <section className="wheel-result-history" aria-labelledby="wheel-history-title">
                     <div className="wheel-result-history-header">

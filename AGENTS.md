@@ -53,3 +53,4 @@ When implementing from a selected generated mock, treat that image as the source
 - The wheel's lion segment uses a red background and the jackpot segment uses a gold background.
 - The wheel audio utility uses action labels: `Ton einschalten` while muted and `Ton ausschalten` while sound is active.
 - Wheel grid children must allow shrinking with `min-width: 0`; on mobile the wheel is capped at `calc(100vw - 32px)`.
+- The wheel should expose all eight fixed prizes before play in a compact premium-casino prize board. It stays visible on desktop, becomes a collapsed `Alle Preise ansehen` disclosure before the wheel on mobile, and highlights the most recently landed symbol.
