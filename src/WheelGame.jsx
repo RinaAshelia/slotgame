@@ -11,6 +11,14 @@ import whiteWolfBoy from "./assets/white-wolf-boy-cut.png";
 import { formatGil } from "./formatGil.js";
 import { useSlotAudio } from "./useSlotAudio.js";
 
+const APP_BASE = import.meta.env.BASE_URL || "/";
+
+function buildAppPath(pathname = "") {
+  const normalizedBase = APP_BASE.endsWith("/") ? APP_BASE : `${APP_BASE}/`;
+  const trimmedPath = pathname.startsWith("/") ? pathname.slice(1) : pathname;
+  return `${normalizedBase}${trimmedPath}`;
+}
+
 const SEGMENTS = [
   { id: "jackpot", label: "Jackpot", payout: 1250000, src: jackpotGoldBoy, tone: "is-jackpot" },
   { id: "lion", label: "Löwe", payout: 100, src: lionEmblem, tone: "is-lion" },
@@ -312,10 +320,10 @@ export function WheelGame() {
             <h1>LUCK SLOTS WHEEL</h1>
           </div>
           <div className="wheel-header-actions">
-            <a className="audio-toggle wheel-nav-link" href="/">
+            <a className="audio-toggle wheel-nav-link" href={buildAppPath("")}>
               Start
             </a>
-            <a className="audio-toggle wheel-nav-link" href="/slot">
+            <a className="audio-toggle wheel-nav-link" href={buildAppPath("slot")}>
               Slotgame
             </a>
             <AudioButton muted={isMuted} onClick={() => void toggleMute()} />

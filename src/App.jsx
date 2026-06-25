@@ -27,6 +27,30 @@ import { WheelGame } from "./WheelGame.jsx";
 import slotMachineImage from "./assets/slot-machine-transparent.png";
 import gluecksradImage from "./assets/gluecksrad1-transparent-v2.png";
 
+const APP_BASE = import.meta.env.BASE_URL || "/";
+
+function buildAppPath(pathname = "") {
+  const normalizedBase = APP_BASE.endsWith("/") ? APP_BASE : `${APP_BASE}/`;
+  const trimmedPath = pathname.startsWith("/") ? pathname.slice(1) : pathname;
+  return `${normalizedBase}${trimmedPath}`;
+}
+
+function getAppRoute() {
+  if (typeof window === "undefined") {
+    return "/";
+  }
+
+  const base = APP_BASE.endsWith("/") ? APP_BASE : `${APP_BASE}/`;
+  const pathname = window.location.pathname;
+
+  if (!pathname.startsWith(base)) {
+    return pathname;
+  }
+
+  const rest = pathname.slice(base.length - 1);
+  return rest === "" ? "/" : rest;
+}
+
 const symbols = [
   {
     id: "dark-wolf",
@@ -857,7 +881,7 @@ export function SlotGame() {
 }
 
 export function App() {
-  const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+  const pathname = getAppRoute();
 
   if (pathname.startsWith("/slot")) {
     return <SlotGame />;
@@ -880,14 +904,14 @@ export function App() {
         </div>
 
         <div className="hub-actions">
-          <a className="hub-tile hub-tile-wheel" href="/wheel">
+          <a className="hub-tile hub-tile-wheel" href={buildAppPath("wheel")}>
             <img alt="Glücksrad Vorschau" className="hub-tile-image hub-tile-image-wheel" src={gluecksradImage} />
             <div className="hub-tile-copy">
               <span>Glücksspiel 1</span>
               <strong>Glücksrad</strong>
             </div>
           </a>
-          <a className="hub-tile hub-tile-slot" href="/slot">
+          <a className="hub-tile hub-tile-slot" href={buildAppPath("slot")}>
             <img alt="Slotmaschine Vorschau" className="hub-tile-image" src={slotMachineImage} />
             <div className="hub-tile-copy">
               <span>Glücksspiel 2</span>
